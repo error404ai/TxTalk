@@ -1,0 +1,33 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node server",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build --outDir dist/client",
+    "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
+    "preview": "cross-env NODE_ENV=production node server"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "^1.132.33",
+    "@tanstack/react-router-devtools": "^1.132.33",
+    "compression": "^1.8.1",
+    "express": "^5.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "sirv": "^3.0.2"
+  },
+  "devDependencies": {
+    "@tanstack/router-plugin": "^1.132.33",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.5.1",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react-swc": "^4.0.1",
+    "cross-env": "^10.0.0",
+    "typescript": "~5.9.2",
+    "vite": "^7.1.5"
+  }
+}

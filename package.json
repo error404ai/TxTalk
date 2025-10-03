@@ -1,5 +1,5 @@
 {
-  "name": "solMessage",
+  "name": "solmessage",
   "private": true,
   "scripts": {
     "build": "turbo run build",
