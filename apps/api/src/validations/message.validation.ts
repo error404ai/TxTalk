@@ -10,17 +10,17 @@ export const messageContentSchema = z.string().min(1, "Message cannot be empty")
 
 export const txSignatureSchema = z.string().min(1, "Transaction signature is required");
 
-export const validateAddressInput = z.object({
+export const validateAddressValidation = z.object({
   address: walletAddressSchema,
 });
 
-export const createMessageTransactionInput = z.object({
+export const createMessageTransactionValidation = z.object({
   senderPublicKey: walletAddressSchema,
   receiverAddress: walletAddressSchema,
   message: messageContentSchema,
 });
 
-export const confirmMessageInput = z.object({
+export const confirmMessageValidation = z.object({
   senderPublicKey: walletAddressSchema,
   receiverAddress: walletAddressSchema,
   message: messageContentSchema,
@@ -28,10 +28,10 @@ export const confirmMessageInput = z.object({
   tokenAddress: walletAddressSchema,
 });
 
-export const getMessagesByWalletInput = z.object({
+export const getMessagesByWalletValidation = z.object({
   walletAddress: walletAddressSchema,
 });
 
-export const getMessageByTxSignatureInput = z.object({
+export const getMessageByTxSignatureValidation = z.object({
   txSignature: txSignatureSchema,
 });

@@ -1,9 +1,9 @@
 import messageService from "../services/message.service";
 import { createTRPCRouter, publicProcedure } from "../trpc/trpc";
-import { confirmMessageInput, createMessageTransactionInput, getMessageByTxSignatureInput, getMessagesByWalletInput, validateAddressInput } from "../validations/message.validation";
+import { confirmMessageValidation, createMessageTransactionValidation, getMessageByTxSignatureValidation, getMessagesByWalletValidation, validateAddressValidation } from "../validations/message.validation";
 
 export const messageRouter = createTRPCRouter({
-  validateAddress: publicProcedure.input(validateAddressInput).query(async ({ input }) => {
+  validateAddress: publicProcedure.input(validateAddressValidation).query(async ({ input }) => {
     return await messageService.validateAddress(input.address);
   }),
 
@@ -12,27 +12,27 @@ export const messageRouter = createTRPCRouter({
     return { fee };
   }),
 
-  createMessageTransaction: publicProcedure.input(createMessageTransactionInput).mutation(async ({ input }) => {
+  createMessageTransaction: publicProcedure.input(createMessageTransactionValidation).mutation(async ({ input }) => {
     return await messageService.createMessageTransaction(input);
   }),
 
-  confirmMessage: publicProcedure.input(confirmMessageInput).mutation(async ({ input }) => {
+  confirmMessage: publicProcedure.input(confirmMessageValidation).mutation(async ({ input }) => {
     return await messageService.confirmMessage(input);
   }),
 
-  getSentMessages: publicProcedure.input(getMessagesByWalletInput).query(async ({ input }) => {
+  getSentMessages: publicProcedure.input(getMessagesByWalletValidation).query(async ({ input }) => {
     return await messageService.getSentMessages(input.walletAddress);
   }),
 
-  getReceivedMessages: publicProcedure.input(getMessagesByWalletInput).query(async ({ input }) => {
+  getReceivedMessages: publicProcedure.input(getMessagesByWalletValidation).query(async ({ input }) => {
     return await messageService.getReceivedMessages(input.walletAddress);
   }),
 
-  getAllMessages: publicProcedure.input(getMessagesByWalletInput).query(async ({ input }) => {
+  getAllMessages: publicProcedure.input(getMessagesByWalletValidation).query(async ({ input }) => {
     return await messageService.getAllMessages(input.walletAddress);
   }),
 
-  getMessageByTxSignature: publicProcedure.input(getMessageByTxSignatureInput).query(async ({ input }) => {
+  getMessageByTxSignature: publicProcedure.input(getMessageByTxSignatureValidation).query(async ({ input }) => {
     return await messageService.getMessageByTxSignature(input.txSignature);
   }),
 });
