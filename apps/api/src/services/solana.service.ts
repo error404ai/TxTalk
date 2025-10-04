@@ -1,3 +1,4 @@
+import { createCreateMetadataAccountV3Instruction, PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { createAssociatedTokenAccountInstruction, createInitializeMint2Instruction, createMintToInstruction, getAssociatedTokenAddress, getMinimumBalanceForRentExemptMint, getMintLen, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import bs58 from "bs58";
@@ -19,6 +20,7 @@ export interface SendMessageParams {
 class SolanaService {
   private connection: Connection;
   private payerKeypair: Keypair | null = null;
+  private static readonly METADATA_NAME_BYTE_LIMIT = 32;
 
   constructor() {
     this.connection = new Connection(envConfig.SOLANA_RPC_URL, "confirmed");
@@ -111,7 +113,37 @@ class SolanaService {
       )
     );
 
-    // 3. Create associated token account for receiver
+    // 3. Attach metadata so the token name reflects the message
+    const [metadataPda] = PublicKey.findProgramAddressSync([Buffer.from("metadata"), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer()], TOKEN_METADATA_PROGRAM_ID);
+
+    transaction.add(
+      createCreateMetadataAccountV3Instruction(
+        {
+          metadata: metadataPda,
+          mint,
+          mintAuthority: sender,
+          payer: sender,
+          updateAuthority: sender,
+        },
+        {
+          createMetadataAccountArgsV3: {
+            data: {
+              name: this.buildMetadataName(message),
+              symbol: "MSG",
+              uri: "",
+              sellerFeeBasisPoints: 0,
+              creators: null,
+              collection: null,
+              uses: null,
+            },
+            isMutable: true,
+            collectionDetails: null,
+          },
+        }
+      )
+    );
+
+    // 4. Create associated token account for receiver
     transaction.add(
       createAssociatedTokenAccountInstruction(
         sender, // payer
@@ -122,7 +154,7 @@ class SolanaService {
       )
     );
 
-    // 4. Mint 1 token to receiver
+    // 5. Mint 1 token to receiver
     transaction.add(
       createMintToInstruction(
         mint,
@@ -222,6 +254,38 @@ class SolanaService {
    */
   getConnection(): Connection {
     return this.connection;
+  }
+
+  private buildMetadataName(message: string): string {
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) {
+      return "Message";
+    }
+
+    const limit = SolanaService.METADATA_NAME_BYTE_LIMIT;
+    if (Buffer.byteLength(trimmedMessage, "utf8") <= limit) {
+      return trimmedMessage;
+    }
+
+    const ellipsis = "…";
+    let candidate = trimmedMessage;
+
+    // Reserve space for ellipsis when truncating
+    while (candidate.length > 0 && Buffer.byteLength(candidate, "utf8") > limit - Buffer.byteLength(ellipsis, "utf8")) {
+      candidate = candidate.slice(0, -1);
+    }
+
+    if (!candidate) {
+      return trimmedMessage.slice(0, limit);
+    }
+
+    let truncated = `${candidate}${ellipsis}`;
+    while (Buffer.byteLength(truncated, "utf8") > limit && candidate.length > 0) {
+      candidate = candidate.slice(0, -1);
+      truncated = `${candidate}${ellipsis}`;
+    }
+
+    return truncated;
   }
 }
 
