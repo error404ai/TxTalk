@@ -11,6 +11,10 @@
       "types": "./dist/index.d.ts"
     },
     "./router": {
+      "browser": {
+        "import": "./dist/routers/browser.js",
+        "types": "./dist/routers/browser.d.ts"
+      },
       "import": "./dist/router.js",
       "types": "./dist/router.d.ts"
     }
@@ -40,6 +44,6 @@
     "@types/node": "^22.10.5",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.7.2"
   }
 }
