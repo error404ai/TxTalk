@@ -21,7 +21,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || "root",
   password: process.env.DB_PASSWORD || "password",
   database: process.env.DB_NAME || "solmessage_db",
-  synchronize: true,
+  synchronize: (process.env.DB_SYNCHRONIZE ?? "true").toLowerCase() !== "false",
   logging: false,
   entities: [entitiesGlob],
   migrations: [migrationsGlob],

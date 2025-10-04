@@ -23,7 +23,7 @@ Ready-to-build messaging stack powered by Hono, tRPC, TypeORM, and a Vite + TanS
 - pnpm 9+
 - MySQL 8 (or compatible)
 
-## Quick start
+## Quick start (local tooling)
 
 ```bash
 pnpm install
@@ -66,6 +66,38 @@ pnpm --filter @solmessage/api db:seed
 | `pnpm --filter frontend run dev`      | Launch the Vite SSR dev server.                           |
 | `pnpm --filter frontend run build`    | Produce client + server bundles for the frontend.         |
 | `pnpm turbo run build`                | Build all apps and packages with caching enabled.         |
+
+## Docker usage
+
+### Development stack
+
+Spin up the entire stack (API, SSR frontend, MySQL, phpMyAdmin) with hot reload:
+
+```bash
+docker compose up --build
+```
+
+- API: <http://localhost:8000>
+- Frontend SSR: <http://localhost:5173>
+- phpMyAdmin: <http://localhost:8080> (default credentials `root` / `password`)
+
+The dev compose file mounts your working tree into the containers while keeping dependencies inside named volumes, so code changes take effect immediately.
+
+### Production stack
+
+Build and run optimized images locally:
+
+```bash
+docker compose -f docker-compose-prod.yml up --build -d
+```
+
+Exposed endpoints:
+
+- API: <http://localhost:8000>
+- Frontend: <http://localhost:4173>
+- phpMyAdmin: <http://localhost:8080>
+
+Override credentials and ports via environment variables defined in `docker-compose-prod.yml` when deploying.
 
 ## Environment reference
 

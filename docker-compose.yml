@@ -1,0 +1,69 @@
+services:
+  mysql:
+    image: mysql:8.3
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: solmessage_db
+      MYSQL_USER: solmessage
+      MYSQL_PASSWORD: solmessage
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "8080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter @solmessage/api dev"
+    working_dir: /app
+    env_file:
+      - ./apps/api/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter frontend run dev"
+    working_dir: /app
+    env_file:
+      - ./apps/frontend/.env
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  mysql_data:
