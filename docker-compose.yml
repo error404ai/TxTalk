@@ -56,7 +56,7 @@ services:
     command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter frontend run dev"
     working_dir: /app
     env_file:
-      - ./apps/frontend/.env
+      - apps/frontend/.env
     ports:
       - "5173:5173"
     volumes:

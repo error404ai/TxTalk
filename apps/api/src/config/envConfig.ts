@@ -1,4 +1,4 @@
-const requiredKeys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USERNAME", "DB_PASSWORD", "MYSQL_ROOT_PASSWORD", "API_PORT", "API_HOST", "DB_SYNCHRONIZE"] as const;
+const requiredKeys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USERNAME", "DB_PASSWORD", "MYSQL_ROOT_PASSWORD", "API_PORT", "API_HOST", "SYNCHRONIZE"] as const;
 
 const missing = requiredKeys.filter((k) => {
   const v = process.env[k];
