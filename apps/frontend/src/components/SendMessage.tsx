@@ -3,7 +3,7 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Transaction } from "@solana/web3.js";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { trpc } from "../trpc/react";
+import { trpc } from "../trpc/trpc";
 
 export function SendMessage() {
   const { publicKey, signTransaction } = useWallet();

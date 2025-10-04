@@ -1,7 +1,7 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Link } from "@tanstack/react-router";
-import { trpc } from "../trpc/react";
+import { trpc } from "../trpc/trpc";
 
 export function MessagesDashboard() {
   const { publicKey } = useWallet();

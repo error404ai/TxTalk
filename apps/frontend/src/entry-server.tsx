@@ -2,11 +2,10 @@ import { dehydrate } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { createRequestHandler, RouterServer } from "@tanstack/react-router/ssr/server";
 import { renderToString } from "react-dom/server";
+import { TrpcProvider } from "./components/providers/TrpcProvider";
 import { getServerApiBaseUrl } from "./config";
 import { routeTree } from "./routeTree.gen";
-import { createTrpcClient } from "./trpc/client";
-import { TrpcProvider } from "./trpc/provider";
-import { createQueryClient } from "./trpc/queryClient";
+import { createQueryClient, createServerTrpcClient } from "./trpc/trpc";
 
 type HeaderTuple = [string, string];
 
@@ -39,20 +38,13 @@ export async function render(requestOrUrl: Request | string): Promise<RenderResu
   const request = toRequest(requestOrUrl);
   const queryClient = createQueryClient();
   const apiBaseUrl = getServerApiBaseUrl();
-  const trpcClient = createTrpcClient({
-    url: `${apiBaseUrl}/trpc`,
-    headers: () => {
-      const headers = new Headers(request.headers);
-      headers.delete("content-length");
-      return Object.fromEntries(headers.entries());
-    },
-  });
+  const trpcClient = createServerTrpcClient({ request, apiBaseUrl });
 
   const handler = createRequestHandler({ request, createRouter: createAppRouter });
 
   const response = await handler(async ({ responseHeaders, router }) => {
     const app = (
-      <TrpcProvider queryClient={queryClient} trpcClient={trpcClient}>
+      <TrpcProvider queryClient={queryClient} trpcClient={trpcClient} showDevtools={false}>
         <RouterServer router={router} />
       </TrpcProvider>
     );

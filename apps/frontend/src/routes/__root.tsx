@@ -1,6 +1,6 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { SolanaWalletProvider } from "../providers/SolanaWalletProvider";
+import { SolanaWalletProvider } from "../components/providers/SolanaWalletProvider";
 
 const RootLayout = () => {
   return (
