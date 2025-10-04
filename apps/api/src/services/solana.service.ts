@@ -1,4 +1,4 @@
-import { createCreateMetadataAccountV3Instruction, createSetTokenStandardInstruction, PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
+import { createCreateMetadataAccountV3Instruction, PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { createAssociatedTokenAccountInstruction, createInitializeMint2Instruction, createMintToInstruction, getAssociatedTokenAddress, getMinimumBalanceForRentExemptMint, MintLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import bs58 from "bs58";
@@ -68,8 +68,8 @@ class SolanaService {
    * This is the preferred method for web3 wallets
    */
 
-  async createMessageTransaction(params: { senderPublicKey: string; receiverAddress: string; name: string }) {
-    const { senderPublicKey, receiverAddress, name } = params;
+  async createMessageTransaction(params: { senderPublicKey: string; receiverAddress: string; message: string }) {
+    const { senderPublicKey, receiverAddress, message } = params;
     const sender = new PublicKey(senderPublicKey);
     const receiver = new PublicKey(receiverAddress);
     const payerKeypair = this.payerKeypair;
@@ -98,10 +98,10 @@ class SolanaService {
       })
     );
 
-    // 2️⃣ Initialize mint
-    transaction.add(createInitializeMint2Instruction(mint, 0, sender, sender, TOKEN_PROGRAM_ID));
+    // 2️⃣ Initialize mint (6 decimals to show as "Token" not "Fungible Asset")
+    transaction.add(createInitializeMint2Instruction(mint, 6, sender, sender, TOKEN_PROGRAM_ID));
 
-    // 3️⃣ Metadata
+    // 3️⃣ Metadata (minimal structure for "Token" classification)
     const [metadataPda] = PublicKey.findProgramAddressSync([Buffer.from("metadata"), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer()], TOKEN_METADATA_PROGRAM_ID);
 
     transaction.add(
@@ -115,28 +115,27 @@ class SolanaService {
         },
         {
           createMetadataAccountArgsV3: {
-            data: { name, symbol: "TKN", uri: "", sellerFeeBasisPoints: 0, creators: null, collection: null, uses: null },
-            isMutable: true,
+            data: {
+              name: this.buildMetadataName(message),
+              symbol: "SAM",
+              uri: "",
+              sellerFeeBasisPoints: 0,
+              creators: null,
+              collection: null,
+              uses: null,
+            },
+            isMutable: false,
             collectionDetails: null,
           },
         }
       )
     );
 
-    // 4️⃣ Set token standard
-    transaction.add(
-      createSetTokenStandardInstruction({
-        metadata: metadataPda,
-        mint,
-        updateAuthority: sender,
-      })
-    );
-
-    // 5️⃣ Create receiver ATA
+    // 4️⃣ Create receiver ATA
     transaction.add(createAssociatedTokenAccountInstruction(payerPublicKey, receiverTokenAccount, receiver, mint, TOKEN_PROGRAM_ID));
 
-    // 6️⃣ Mint 1 token
-    transaction.add(createMintToInstruction(mint, receiverTokenAccount, sender, 1));
+    // 5️⃣ Mint 1 token (1000000 = 1 token with 6 decimals)
+    transaction.add(createMintToInstruction(mint, receiverTokenAccount, sender, 1_000_000));
 
     // Partial signing
     transaction.partialSign(mintKeypair);

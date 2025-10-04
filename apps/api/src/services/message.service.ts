@@ -86,7 +86,7 @@ class MessageService {
     const { transaction, mintKeypair } = await solanaService.createMessageTransaction({
       senderPublicKey,
       receiverAddress,
-      name: message,
+      message,
     });
 
     // Get estimated fee
