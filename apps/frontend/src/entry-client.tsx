@@ -11,6 +11,8 @@ import { createTrpcClient } from "./trpc/client";
 import { TrpcProvider } from "./trpc/provider";
 import { createQueryClient } from "./trpc/queryClient";
 
+import "./index.css";
+
 // Create a new router instance
 const router = createRouter({ routeTree });
 
