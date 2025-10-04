@@ -53,7 +53,7 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
-    command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter frontend run dev"
+    command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter @solmessage/frontend run dev"
     working_dir: /app
     env_file:
       - apps/frontend/.env
