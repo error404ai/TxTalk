@@ -2,6 +2,8 @@
 FROM node:24 
 WORKDIR /app
 
+COPY . .
+
 RUN npm install -g pnpm
 RUN pnpm install
 
