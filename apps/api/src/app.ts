@@ -3,7 +3,7 @@ import type { Context as HonoContext } from "hono";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { AppDataSource, initializeDatabase } from "./database";
-import { appRouter } from "./routers/index";
+import { appRouter } from "./routers/appRouter";
 import { createContext } from "./trpc/trpc";
 
 const app = new Hono();
@@ -57,4 +57,4 @@ app.use(
 await ensureDatabaseInitialized();
 
 export default app;
-export type { AppRouter } from "./routers/index.js";
+export type { AppRouter } from "./routers/appRouter.js";

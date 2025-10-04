@@ -1,6 +1,6 @@
 import { createTRPCRouter } from "../trpc/trpc";
-import { healthRouter } from "./health";
-import { messageRouter } from "./message";
+import { healthRouter } from "./healthRouter";
+import { messageRouter } from "./messageRouter";
 
 export const appRouter = createTRPCRouter({
   health: healthRouter,

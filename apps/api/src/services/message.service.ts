@@ -35,6 +35,7 @@ class MessageService {
    * Validate wallet address
    */
   async validateAddress(address: string): Promise<{ valid: boolean; error?: string }> {
+    console.log("Validating address:", address);
     const isValid = await solanaService.validateWalletAddress(address);
     if (!isValid) {
       return { valid: false, error: "Invalid Solana wallet address" };

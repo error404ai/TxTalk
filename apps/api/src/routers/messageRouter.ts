@@ -4,6 +4,7 @@ import { confirmMessageValidation, createMessageTransactionValidation, getMessag
 
 export const messageRouter = createTRPCRouter({
   validateAddress: publicProcedure.input(validateAddressValidation).query(async ({ input }) => {
+    console.log("Validating address:", input.address);
     return await messageService.validateAddress(input.address);
   }),
 

@@ -1,2 +1,2 @@
-export { appRouter } from "./routers/index";
-export type { AppRouter } from "./routers/index";
+export { appRouter } from "./routers/appRouter";
+export type { AppRouter } from "./routers/appRouter";
