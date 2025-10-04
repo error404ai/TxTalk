@@ -1,7 +1,7 @@
 import { createAssociatedTokenAccountInstruction, createInitializeMint2Instruction, createMintToInstruction, getAssociatedTokenAddress, getMinimumBalanceForRentExemptMint, getMintLen, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import bs58 from "bs58";
-import envConfig from "../config/envConfig.js";
+import envConfig from "../config/envConfig";
 
 export interface MintMessageTokenResult {
   tokenAddress: string;

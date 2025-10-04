@@ -1,6 +1,6 @@
-import { AppDataSource } from "../database.js";
-import { Message } from "../entities/Message.js";
-import solanaService from "./solana.service.js";
+import { AppDataSource } from "../database";
+import { Message } from "../entities/Message";
+import solanaService from "./solana.service";
 
 export interface CreateMessageTransactionParams {
   senderPublicKey: string;

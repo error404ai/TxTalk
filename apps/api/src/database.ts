@@ -4,7 +4,7 @@ import "reflect-metadata";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DataSource } from "typeorm";
-import envConfig from "./config/envConfig.js";
+import envConfig from "./config/envConfig";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

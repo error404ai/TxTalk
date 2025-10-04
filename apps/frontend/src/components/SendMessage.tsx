@@ -2,7 +2,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Transaction } from "@solana/web3.js";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { trpc } from "../trpc/react";
 
 export function SendMessage() {
@@ -17,12 +17,35 @@ export function SendMessage() {
     solscanLink: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [shouldValidate, setShouldValidate] = useState(false);
 
   // tRPC queries and mutations
   const { data: feeData } = trpc.message.getEstimatedFee.useQuery();
-  const validateAddressMutation = trpc.message.validateAddress.useMutation();
+
+  // Validate address query - only enabled when we want to validate
+  const { data: validationResult } = trpc.message.validateAddress.useQuery(
+    { address: receiverAddress },
+    {
+      enabled: shouldValidate && receiverAddress.length >= 32,
+      retry: false,
+    }
+  );
+
   const createTxMutation = trpc.message.createMessageTransaction.useMutation();
   const confirmMutation = trpc.message.confirmMessage.useMutation();
+
+  // Handle validation result
+  useEffect(() => {
+    if (validationResult && shouldValidate) {
+      setIsValidAddress(validationResult.valid);
+      if (!validationResult.valid && validationResult.error) {
+        setError(validationResult.error);
+      } else {
+        setError(null);
+      }
+      setShouldValidate(false);
+    }
+  }, [validationResult, shouldValidate]);
 
   // Validate address on blur
   const handleAddressBlur = async () => {
@@ -31,18 +54,13 @@ export function SendMessage() {
       return;
     }
 
-    try {
-      const result = await validateAddressMutation.mutateAsync({ address: receiverAddress });
-      setIsValidAddress(result.valid);
-      if (!result.valid && result.error) {
-        setError(result.error);
-      } else {
-        setError(null);
-      }
-    } catch (err) {
+    if (receiverAddress.length < 32) {
       setIsValidAddress(false);
-      setError("Failed to validate address");
+      setError("Address is too short");
+      return;
     }
+
+    setShouldValidate(true);
   };
 
   const handleSendMessage = async () => {

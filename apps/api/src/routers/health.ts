@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "../trpc/trpc.js";
+import { createTRPCRouter, publicProcedure } from "../trpc/trpc";
 
 export const healthRouter = createTRPCRouter({
   ping: publicProcedure.query(() => ({

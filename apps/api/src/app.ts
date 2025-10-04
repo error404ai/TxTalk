@@ -2,9 +2,9 @@ import { trpcServer } from "@hono/trpc-server";
 import type { Context as HonoContext } from "hono";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { AppDataSource, initializeDatabase } from "./database.js";
-import { appRouter } from "./routers/index.js";
-import { createContext } from "./trpc/trpc.js";
+import { AppDataSource, initializeDatabase } from "./database";
+import { appRouter } from "./routers/index";
+import { createContext } from "./trpc/trpc";
 
 const app = new Hono();
 let dbInitPromise: Promise<void> | null = null;
