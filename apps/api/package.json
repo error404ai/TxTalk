@@ -1,0 +1,45 @@
+{
+  "name": "@solmessage/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./router": {
+      "import": "./dist/router.js",
+      "types": "./dist/router.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "tsx --watch src/nodeIndex.ts",
+    "build": "tsc -b tsconfig.json --force && tsc-alias",
+    "build:types": "tsc --declaration --emitDeclarationOnly",
+    "start": "node -r dotenv/config dist/index.js",
+    "check-types": "tsc --noEmit",
+    "db:drop": "tsx ./node_modules/typeorm/cli.js schema:drop --dataSource src/database.ts",
+    "db:seed": "tsx src/seeders/seed.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.3",
+    "@hono/trpc-server": "^0.3.2",
+    "@trpc/server": "^11.0.0",
+    "dotenv": "^16.4.7",
+    "hono": "^4.6.14",
+    "mysql2": "^3.12.0",
+    "reflect-metadata": "^0.2.2",
+    "superjson": "^2.2.2",
+    "typeorm": "^0.3.20",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.2"
+  }
+}

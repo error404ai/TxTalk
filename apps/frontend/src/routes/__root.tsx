@@ -13,7 +13,7 @@ const RootLayout = () => (
     </div>
     <hr />
     <Outlet />
-    <TanStackRouterDevtools />
+    {typeof window !== "undefined" ? <TanStackRouterDevtools /> : null}
   </>
 );
 
