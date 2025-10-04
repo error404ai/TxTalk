@@ -38,32 +38,18 @@ class SolanaService {
    * Validates if a given string is a valid Solana wallet address
    */
   async validateWalletAddress(address: string): Promise<boolean> {
-    try {
-      const publicKey = new PublicKey(address);
-      return PublicKey.isOnCurve(publicKey.toBuffer());
-    } catch {
-      return false;
-    }
+    const publicKey = new PublicKey(address);
+    return PublicKey.isOnCurve(publicKey.toBuffer());
   }
 
   /**
    * Estimates the fee for sending a message token
    */
   async estimateFee(): Promise<number> {
-    try {
-      // Get recent blockhash to estimate fee
-      const recentBlockhash = await this.connection.getLatestBlockhash();
+    const recentBlockhash = await this.connection.getLatestBlockhash();
+    const estimatedFee = 0.002;
 
-      // Estimate: create mint + create ATA + mint to
-      // Approximate 3-4 signatures worth of fees plus rent
-      const estimatedFee = 0.002; // Conservative estimate in SOL
-
-      return estimatedFee;
-    } catch (error) {
-      console.error("Error estimating fee:", error);
-      // Return a conservative estimate
-      return 0.002; // 0.002 SOL
-    }
+    return estimatedFee;
   }
 
   /**
