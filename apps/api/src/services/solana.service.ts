@@ -48,10 +48,12 @@ class SolanaService {
    * Estimates the fee for sending a message token
    */
   async estimateFee(): Promise<number> {
-    const recentBlockhash = await this.connection.getLatestBlockhash();
-    const estimatedFee = 0.002;
+    if (this.payerKeypair) {
+      return 0;
+    }
 
-    return estimatedFee;
+    await this.connection.getLatestBlockhash();
+    return 0.002;
   }
 
   /**
@@ -72,6 +74,8 @@ class SolanaService {
 
     const sender = new PublicKey(senderPublicKey);
     const receiver = new PublicKey(receiverAddress);
+    const payerKeypair = this.payerKeypair;
+    const payerPublicKey = payerKeypair?.publicKey ?? sender;
 
     // Generate a new keypair for the token mint
     const mintKeypair = Keypair.generate();
@@ -89,12 +93,12 @@ class SolanaService {
 
     const transaction = new Transaction();
     transaction.recentBlockhash = blockhash;
-    transaction.feePayer = sender;
+    transaction.feePayer = payerPublicKey;
 
     // 1. Create mint account
     transaction.add(
       SystemProgram.createAccount({
-        fromPubkey: sender,
+        fromPubkey: payerPublicKey,
         newAccountPubkey: mint,
         space: mintLen,
         lamports,
@@ -122,7 +126,7 @@ class SolanaService {
           metadata: metadataPda,
           mint,
           mintAuthority: sender,
-          payer: sender,
+          payer: payerPublicKey,
           updateAuthority: sender,
         },
         {
@@ -146,7 +150,7 @@ class SolanaService {
     // 4. Create associated token account for receiver
     transaction.add(
       createAssociatedTokenAccountInstruction(
-        sender, // payer
+        payerPublicKey, // payer
         receiverTokenAccount, // associated token account
         receiver, // owner
         mint, // mint
@@ -166,12 +170,13 @@ class SolanaService {
       )
     );
 
-    // Note: We're skipping metadata creation for simplicity
-    // The token name in wallet explorers will show the mint address
-    // The message is stored in our database for retrieval
-
     // Partial sign with mint keypair
     transaction.partialSign(mintKeypair);
+
+    // If server-side payer is configured, have the server cover rent and fees
+    if (payerKeypair) {
+      transaction.partialSign(payerKeypair);
+    }
 
     // Serialize transaction for client-side signing
     const serializedTransaction = transaction.serialize({
