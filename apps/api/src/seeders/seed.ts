@@ -17,8 +17,12 @@ async function seed() {
   }
 
   const welcomeMessage = repository.create({
-    title: "Welcome to solMessage",
-    body: "You're all set! Start building your messaging logic on top of this scaffold.",
+    sender: "System",
+    receiver: "System",
+    message: "Welcome to solMessage! You're all set. Start sending messages on Solana.",
+    txSignature: "SEED_TX_SIGNATURE",
+    tokenAddress: null,
+    feePaid: 0,
   });
 
   await repository.save(welcomeMessage);
