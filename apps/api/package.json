@@ -20,7 +20,7 @@
     }
   },
   "scripts": {
-    "dev": "tsx --watch src/nodeIndex.ts",
+    "dev": "tsx --watch src/index.ts",
     "build": "tsc -b tsconfig.json --force && tsc-alias",
     "build:types": "tsc --declaration --emitDeclarationOnly",
     "start": "node -r dotenv/config dist/index.js",
