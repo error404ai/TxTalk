@@ -15,6 +15,7 @@ export function SendMessage() {
     id: string;
     txSignature: string;
     solscanLink: string;
+    metadataUri: string | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [shouldValidate, setShouldValidate] = useState(false);
@@ -106,6 +107,7 @@ export function SendMessage() {
         id: result.id,
         txSignature: result.txSignature,
         solscanLink: result.solscanLink,
+        metadataUri: txData.metadataUri,
       });
 
       // Clear form
@@ -189,6 +191,11 @@ export function SendMessage() {
                   <a href={txResult.solscanLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline text-sm">
                     View on Solscan →
                   </a>
+                  {txResult.metadataUri && (
+                    <a href={txResult.metadataUri} target="_blank" rel="noopener noreferrer" className="mt-2 block text-blue-300 hover:text-blue-200 underline text-sm">
+                      View metadata →
+                    </a>
+                  )}
                 </div>
               )}
 

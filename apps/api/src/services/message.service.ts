@@ -57,6 +57,7 @@ class MessageService {
   async createMessageTransaction(params: CreateMessageTransactionParams): Promise<{
     transaction: string;
     mintKeypair: { publicKey: string; secretKey: string };
+    metadataUri: string | null;
     estimatedFee: number;
   }> {
     const { senderPublicKey, receiverAddress, message } = params;
@@ -83,7 +84,7 @@ class MessageService {
     }
 
     // Create transaction
-    const { transaction, mintKeypair } = await solanaService.createMessageTransaction({
+    const { transaction, mintKeypair, metadataUri } = await solanaService.createMessageTransaction({
       senderPublicKey,
       receiverAddress,
       message,
@@ -95,6 +96,7 @@ class MessageService {
     return {
       transaction,
       mintKeypair,
+      metadataUri,
       estimatedFee,
     };
   }

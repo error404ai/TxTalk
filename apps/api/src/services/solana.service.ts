@@ -4,11 +4,13 @@ import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transa
 import bs58 from "bs58";
 
 import envConfig from "../config/envConfig";
+import nftStorageService, { MetadataPayload } from "./nftStorage.service";
 
 export interface MintMessageTokenResult {
   tokenAddress: string;
   txSignature: string;
   feePaid: number;
+  metadataUri: string | null;
 }
 
 export interface SendMessageParams {
@@ -101,6 +103,31 @@ class SolanaService {
     // 2️⃣ Initialize mint (6 decimals to show as "Token" not "Fungible Asset")
     transaction.add(createInitializeMint2Instruction(mint, 6, sender, sender, TOKEN_PROGRAM_ID));
 
+    const tokenName = this.buildMetadataName(message);
+    let metadataUri = "";
+
+    const metadataPayload: MetadataPayload = {
+      name: tokenName,
+      symbol: "SAM",
+      description: message,
+      attributes: [
+        { trait_type: "Sender", value: sender.toBase58() },
+        { trait_type: "Receiver", value: receiver.toBase58() },
+      ],
+    };
+
+    if (envConfig.MESSAGE_METADATA_IMAGE_URL) {
+      metadataPayload.image = envConfig.MESSAGE_METADATA_IMAGE_URL;
+    }
+
+    if (nftStorageService.isEnabled()) {
+      const uploadedUri = await nftStorageService.uploadMetadata(metadataPayload);
+
+      if (uploadedUri) {
+        metadataUri = uploadedUri;
+      }
+    }
+
     // 3️⃣ Metadata (minimal structure for "Token" classification)
     const [metadataPda] = PublicKey.findProgramAddressSync([Buffer.from("metadata"), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer()], TOKEN_METADATA_PROGRAM_ID);
 
@@ -116,9 +143,9 @@ class SolanaService {
         {
           createMetadataAccountArgsV3: {
             data: {
-              name: this.buildMetadataName(message),
+              name: tokenName,
               symbol: "SAM",
-              uri: "",
+              uri: metadataUri,
               sellerFeeBasisPoints: 0,
               creators: null,
               collection: null,
@@ -146,6 +173,7 @@ class SolanaService {
     return {
       transaction: serializedTransaction.toString("base64"),
       mintKeypair: { publicKey: mintKeypair.publicKey.toBase58(), secretKey: bs58.encode(mintKeypair.secretKey) },
+      metadataUri: metadataUri || null,
     };
   }
 
