@@ -1,4 +1,4 @@
-const requiredKeys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USERNAME", "DB_PASSWORD", "MYSQL_ROOT_PASSWORD", "API_PORT", "API_HOST", "SYNCHRONIZE", "SOLANA_NETWORK", "SOLANA_RPC_URL", "NFT_STORAGE_API_KEY"] as const;
+const requiredKeys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USERNAME", "DB_PASSWORD", "MYSQL_ROOT_PASSWORD", "API_PORT", "API_HOST", "SYNCHRONIZE", "SOLANA_NETWORK", "SOLANA_RPC_URL", "NFT_STORAGE_API_KEY", "TEST_MODE"] as const;
 
 const missing = requiredKeys.filter((k) => {
   const v = process.env[k];
@@ -25,6 +25,7 @@ const envConfig = {
   NFT_STORAGE_API_KEY: process.env.NFT_STORAGE_API_KEY as string | undefined,
   NFT_STORAGE_GATEWAY_URL: process.env.NFT_STORAGE_GATEWAY_URL || "https://nftstorage.link/ipfs/",
   MESSAGE_METADATA_IMAGE_URL: process.env.MESSAGE_METADATA_IMAGE_URL as string | undefined,
+  TEST_MODE: process.env.TEST_MODE === "true" ? true : false,
 };
 
 export default envConfig;

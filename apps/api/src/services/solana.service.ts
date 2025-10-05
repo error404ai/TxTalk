@@ -58,6 +58,12 @@ class SolanaService {
       return 0;
     }
 
+    // In test mode on devnet, fees are essentially free
+    if (envConfig.TEST_MODE && envConfig.SOLANA_NETWORK === "devnet") {
+      console.log("🧪 TEST MODE: Using devnet - fees are free!");
+      return 0.000005; // Symbolic amount for display
+    }
+
     await this.connection.getLatestBlockhash();
 
     const mintRent = await getMinimumBalanceForRentExemptMint(this.connection);
