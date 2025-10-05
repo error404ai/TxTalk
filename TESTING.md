@@ -9,9 +9,6 @@ This guide explains how to test the solMessage application **without spending re
 Add or update these environment variables in your `.env` file:
 
 ```bash
-# Enable test mode to skip NFT.Storage uploads
-TEST_MODE=true
-
 # Use Solana devnet (free test network)
 SOLANA_NETWORK=devnet
 SOLANA_RPC_URL=https://api.devnet.solana.com
@@ -59,19 +56,12 @@ cd /home/skmiraj/projects/solMessage
 pnpm dev
 ```
 
-## What Happens in Test Mode?
+## Testing on Devnet
 
-When `TEST_MODE=true`:
-
-✅ **NFT.Storage uploads are skipped** - No API costs
-
-- Instead of uploading to IPFS, a mock metadata URI is returned
-- Metadata is logged to console for verification
-
-✅ **Devnet transactions are free**
+✅ **Low-cost testing on devnet**
 
 - Use devnet SOL (zero real value)
-- Test all features without spending money
+- Test all features with minimal fees
 - View transactions on: https://explorer.solana.com/?cluster=devnet
 
 ✅ **Full feature testing**
@@ -86,10 +76,10 @@ When `TEST_MODE=true`:
 2. **Switch wallet to devnet** network
 3. **Send a test message**:
    - Message will be created as a token
-   - Fee: ~0.000005 devnet SOL (free)
-   - NFT metadata: mocked (no upload cost)
+   - Fee: ~0.002 devnet SOL (very low cost)
+   - Metadata uses dummy URI
 4. **View on explorer**: Check transaction on Solscan devnet
-5. **Repeat as many times as needed** - it's all free!
+5. **Repeat as many times as needed** - very low cost!
 
 ## Switching to Production
 
@@ -97,7 +87,6 @@ When ready to use real mainnet:
 
 ```bash
 # .env changes
-TEST_MODE=false
 SOLANA_NETWORK=mainnet-beta
 SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 # Or use a paid RPC like Helius/QuickNode for better reliability
@@ -107,7 +96,6 @@ SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 
 - SOL transaction fees: ~0.00001-0.0001 SOL per message (~$0.002-$0.02)
 - Token creation: ~0.002-0.004 SOL (~$0.40-$0.80)
-- NFT.Storage: Free tier available (1GB storage)
 
 ## Troubleshooting
 

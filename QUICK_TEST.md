@@ -12,7 +12,6 @@ cp apps/api/.env.example apps/api/.env
 2. **Make sure these are set**:
 
 ```bash
-TEST_MODE=true
 SOLANA_NETWORK=devnet
 SOLANA_RPC_URL=https://api.devnet.solana.com
 ```
