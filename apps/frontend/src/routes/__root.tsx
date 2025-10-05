@@ -1,12 +1,12 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { RouterDevtools } from "../components/providers/RouterDevtools";
 import { SolanaWalletProvider } from "../components/providers/SolanaWalletProvider";
 
 const RootLayout = () => {
   return (
     <SolanaWalletProvider>
       <Outlet />
-      {typeof window !== "undefined" ? <TanStackRouterDevtools /> : null}
+      <RouterDevtools />
     </SolanaWalletProvider>
   );
 };
