@@ -26,7 +26,7 @@ class NftStorageService {
     // In test mode, return a mock URI instead of uploading
     if (envConfig.TEST_MODE) {
       console.log("🧪 TEST MODE: Skipping NFT.Storage upload, using mock URI");
-      console.log("📦 Metadata:", JSON.stringify(metadata, null, 2));
+      //   console.log("📦 Metadata:", JSON.stringify(metadata, null, 2));
       return `https://mock-metadata.example.com/${Buffer.from(metadata.name).toString("base64").substring(0, 16)}.json`;
     }
 

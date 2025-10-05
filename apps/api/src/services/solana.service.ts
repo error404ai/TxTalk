@@ -93,6 +93,8 @@ class SolanaService {
     const { blockhash } = await this.connection.getLatestBlockhash();
     const lamports = await this.connection.getMinimumBalanceForRentExemption(MintLayout.span);
 
+    console.log("lamports", lamports);
+
     const transaction = new Transaction();
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = payerPublicKey;
