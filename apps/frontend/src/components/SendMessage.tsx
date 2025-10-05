@@ -19,6 +19,7 @@ export function SendMessage() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [shouldValidate, setShouldValidate] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   // tRPC queries and mutations
   const { data: feeData } = trpc.message.getEstimatedFee.useQuery();
@@ -34,6 +35,10 @@ export function SendMessage() {
 
   const createTxMutation = trpc.message.createMessageTransaction.useMutation();
   const confirmMutation = trpc.message.confirmMessage.useMutation();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Handle validation result
   useEffect(() => {
@@ -132,7 +137,13 @@ export function SendMessage() {
               View Messages Dashboard →
             </Link>
           </div>
-          <WalletMultiButton />
+          {isClient ? (
+            <WalletMultiButton />
+          ) : (
+            <button className="wallet-adapter-button wallet-adapter-button-trigger" type="button">
+              Select Wallet
+            </button>
+          )}
         </div>
 
         {!publicKey ? (
