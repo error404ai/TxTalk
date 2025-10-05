@@ -2,11 +2,8 @@ import { createCreateMetadataAccountV3Instruction, PROGRAM_ID as TOKEN_METADATA_
 import { createAssociatedTokenAccountInstruction, createInitializeMint2Instruction, createMintToInstruction, getAssociatedTokenAddress, getMinimumBalanceForRentExemptMint, MintLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import bs58 from "bs58";
-import fs from "fs/promises";
-import path from "path";
 
 import envConfig from "../config/envConfig";
-import nftStorageService, { MetadataPayload } from "./nftStorage.service";
 
 export interface MintMessageTokenResult {
   tokenAddress: string;
@@ -114,32 +111,7 @@ class SolanaService {
     transaction.add(createInitializeMint2Instruction(mint, 6, sender, sender, TOKEN_PROGRAM_ID));
 
     const tokenName = this.buildMetadataName(message);
-    let metadataUri = "";
-
-    const metadataPayload: MetadataPayload = {
-      name: tokenName,
-      symbol: "SAM",
-      description: message,
-      attributes: [
-        { trait_type: "Sender", value: sender.toBase58() },
-        { trait_type: "Receiver", value: receiver.toBase58() },
-      ],
-    };
-
-    const tokenImageDataUri = await getTokenImageDataUri();
-    if (tokenImageDataUri) {
-      metadataPayload.image = tokenImageDataUri;
-    } else if (envConfig.MESSAGE_METADATA_IMAGE_URL) {
-      metadataPayload.image = envConfig.MESSAGE_METADATA_IMAGE_URL;
-    }
-
-    if (nftStorageService.isEnabled()) {
-      const uploadedUri = await nftStorageService.uploadMetadata(metadataPayload);
-
-      if (uploadedUri) {
-        metadataUri = uploadedUri;
-      }
-    }
+    const metadataUri = "https://dummy-metadata.example.com";
 
     // 3️⃣ Metadata (minimal structure for "Token" classification)
     const [metadataPda] = PublicKey.findProgramAddressSync([Buffer.from("metadata"), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer()], TOKEN_METADATA_PROGRAM_ID);
@@ -288,27 +260,6 @@ class SolanaService {
     }
 
     return truncated;
-  }
-}
-
-const TOKEN_IMAGE_PATH = path.resolve(process.cwd(), "assets/tokenImage.jpg");
-let tokenImageDataUriPromise: Promise<string | null> | null = null;
-
-async function getTokenImageDataUri(): Promise<string | null> {
-  if (!tokenImageDataUriPromise) {
-    tokenImageDataUriPromise = loadTokenImageDataUri();
-  }
-
-  return tokenImageDataUriPromise;
-}
-
-async function loadTokenImageDataUri(): Promise<string | null> {
-  try {
-    const imageBuffer = await fs.readFile(TOKEN_IMAGE_PATH);
-    return `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
-  } catch (error) {
-    console.warn("⚠️ Unable to read default token image at", TOKEN_IMAGE_PATH, error);
-    return null;
   }
 }
 

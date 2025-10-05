@@ -15,9 +15,6 @@ TEST_MODE=true
 # Use Solana devnet (free test network)
 SOLANA_NETWORK=devnet
 SOLANA_RPC_URL=https://api.devnet.solana.com
-
-# Optional: NFT Storage (will be mocked in test mode)
-NFT_STORAGE_API_KEY=your_key_here_optional
 ```
 
 ### 2. Get Free Devnet SOL
