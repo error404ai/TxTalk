@@ -19,10 +19,7 @@ async function ensureDatabaseInitialized(): Promise<void> {
   await dbInitPromise;
 }
 
-const corsOrigins = (process.env.CORS_ORIGINS || process.env.VITE_APP_URL || "http://localhost:5173")
-  .split(",")
-  .map((origin: string) => origin.trim())
-  .filter(Boolean);
+const corsOrigins = ["http://localhost:5173", "https://txtalk.fun"];
 
 app.use(
   "*",
