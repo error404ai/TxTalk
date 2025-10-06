@@ -4,8 +4,12 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install -g pnpm
-RUN pnpm install
+
+# Use BuildKit cache mount for pnpm store to avoid re-downloading packages on every build.
+# The `--mount=type=cache` requires Docker BuildKit (used by buildx).
+RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
+	npm install -g pnpm && \
+	pnpm install --store=/root/.pnpm-store --frozen-lockfile
 
 # Allow build-time injection of Vite env variables so import.meta.env.* is populated in the production bundle.
 ARG VITE_API_URL
