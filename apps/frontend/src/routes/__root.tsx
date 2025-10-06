@@ -24,7 +24,7 @@ const RootLayout = () => {
           <header className="mb-12 flex flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl shadow-cyan-500/5 backdrop-blur lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
               <Link to="/" className="text-2xl font-semibold tracking-tight text-white">
-                txtalk
+                Txtalk
               </Link>
               <p className="max-w-xl text-sm text-slate-300">Send beautifully tokenized messages across the Solana network and keep an eye on every interaction in one sophisticated dashboard.</p>
             </div>
