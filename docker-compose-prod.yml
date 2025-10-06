@@ -5,10 +5,10 @@ services:
     env_file:
       - ./apps/api/.env
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-txtalk_db}
-      MYSQL_USER: ${MYSQL_USER:-txtalk}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-txtalk}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
