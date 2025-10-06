@@ -1,3 +1,11 @@
+// Provide a browser-friendly Buffer global for libraries that expect Node's Buffer
+// (e.g. some crypto/solana/browser helpers). This prevents "Buffer is not defined"
+// errors in the production client bundle.
+import { Buffer } from "buffer";
+if (typeof (window as any).Buffer === "undefined") {
+  (window as any).Buffer = Buffer;
+}
+
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { hydrate as hydrateRouter } from "@tanstack/react-router/ssr/client";
 import { StrictMode } from "react";
