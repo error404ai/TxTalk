@@ -44,7 +44,7 @@ services:
     image: ghcr.io/error404ai/txtalk/frontend:${TAG}
     restart: unless-stopped
     environment:
-      VITE_API_URL: https://txtalk.fun
+      VITE_API_URL: https://api.txtalk.fun
       VITE_SOLANA_NETWORK: mainnet
       VITE_SOLANA_RPC_URL: https://api.mainnet-beta.solana.com
     ports:
