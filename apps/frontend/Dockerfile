@@ -9,4 +9,4 @@ RUN pnpm install
 
 EXPOSE 5173
 
-CMD ["pnpm", "--filter", "@solmessage/frontend", "dev"]
+CMD ["pnpm", "--filter", "@txtalk/frontend", "dev"]

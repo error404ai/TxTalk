@@ -9,4 +9,4 @@ RUN pnpm install
 
 EXPOSE 8000
 
-CMD ["pnpm", "--filter", "@solmessage/api", "dev"]
+CMD ["pnpm", "--filter", "@txtalk/api", "dev"]

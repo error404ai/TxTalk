@@ -15,4 +15,4 @@ RUN pnpm run build
 
 EXPOSE 8000
 
-CMD ["pnpm", "--filter", "@solmessage/api", "start"]
+CMD ["pnpm", "--filter", "@txtalk/api", "start"]

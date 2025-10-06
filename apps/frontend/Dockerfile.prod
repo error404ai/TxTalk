@@ -25,4 +25,4 @@ RUN pnpm run build
 
 EXPOSE 5173
 
-CMD ["pnpm", "--filter", "@solmessage/frontend", "preview"]
+CMD ["pnpm", "--filter", "@txtalk/frontend", "preview"]

@@ -58,7 +58,7 @@ export async function render(requestOrUrl: Request | string): Promise<RenderResu
 
     const serialize = (value: unknown) => JSON.stringify(value ?? null).replace(/</g, "\\u003c");
 
-    const hydrationScripts = [`<script>window.__REACT_QUERY_STATE__ = ${serialize(dehydratedState)};</script>`, `<script>window.__SOLMESSAGE_API_URL__ = ${serialize(apiBaseUrl)};</script>`].join("");
+    const hydrationScripts = [`<script>window.__REACT_QUERY_STATE__ = ${serialize(dehydratedState)};</script>`, `<script>window.__TXTALK_API_URL__ = ${serialize(apiBaseUrl)};</script>`].join("");
 
     const payload: RenderPayload = {
       status: router.state.statusCode ?? 200,
