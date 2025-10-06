@@ -144,6 +144,6 @@ jobs:
              cd /var/www/TxTalk && \
              git pull origin production && \
              docker-compose -f docker-compose-prod.yml down --remove-orphans && \
-             TAG=latest docker-compose -f docker-compose-prod.yml up -d && \
+             TAG=latest docker-compose --env-file ./apps/api/.env -f docker-compose-prod.yml up -d && \
              docker system prune -a --volumes=false --force && \
              rm -f /root/.docker/config.json"
