@@ -20,10 +20,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": "./",
     "paths": {
-      "@solmessage/api": ["../api/src/index.ts"],
-      "@solmessage/api/*": ["../api/src/*"]
+      "@txtalk/api": ["../api/src/index.ts"],
+      "@txtalk/api/*": ["../api/src/*"]
     }
   },
   "include": ["src"],

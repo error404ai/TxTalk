@@ -1,5 +1,5 @@
 {
-  "name": "solmessage",
+  "name": "txtalk",
   "private": true,
   "scripts": {
     "build": "turbo run build",

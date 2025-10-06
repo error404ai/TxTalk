@@ -4,9 +4,9 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: solmessage_db
-      MYSQL_USER: solmessage
-      MYSQL_PASSWORD: solmessage
+  MYSQL_DATABASE: txtalk_db
+  MYSQL_USER: txtalk
+  MYSQL_PASSWORD: txtalk
     ports:
       - "3306:3306"
     volumes:
@@ -36,7 +36,7 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter @solmessage/api dev"
+    command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter @txtalk/api dev"
     working_dir: /app
     env_file:
       - ./apps/api/.env
@@ -53,7 +53,7 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
-    command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter @solmessage/frontend run dev"
+  command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter @txtalk/frontend run dev"
     working_dir: /app
     env_file:
       - apps/frontend/.env

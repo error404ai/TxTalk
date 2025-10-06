@@ -152,7 +152,7 @@ export function SendMessage() {
             <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Solana native messaging</span>
             <div className="space-y-4">
               <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">Mint a story with every message you send.</h1>
-              <p className="max-w-xl text-lg text-slate-300">SolMessage transforms simple wallet messages into collectible, verifiable moments. Compose your note, mint it as a token, and deliver it directly to any Solana wallet in seconds.</p>
+              <p className="max-w-xl text-lg text-slate-300">txtalk transforms simple wallet messages into collectible, verifiable moments. Compose your note, mint it as a token, and deliver it directly to any Solana wallet in seconds.</p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">

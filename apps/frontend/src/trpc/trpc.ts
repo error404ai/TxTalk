@@ -1,6 +1,6 @@
-import { type AppRouter } from "@solmessage/api/router";
 import { QueryClient, type DefaultOptions } from "@tanstack/react-query";
 import { createTRPCReact, httpBatchLink } from "@trpc/react-query";
+import { type AppRouter } from "@txtalk/api/router";
 import superjson from "superjson";
 
 const defaultQueryClientOptions: DefaultOptions = {
@@ -41,7 +41,7 @@ const resolveBrowserHeaders = (): Record<string, string> => {
     return {};
   }
 
-  const storedToken = localStorage.getItem("solmessage_token");
+  const storedToken = localStorage.getItem("txtalk_token");
   if (!storedToken) {
     return {};
   }

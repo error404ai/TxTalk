@@ -19,7 +19,7 @@ async function seed() {
   const welcomeMessage = repository.create({
     sender: "System",
     receiver: "System",
-    message: "Welcome to solMessage! You're all set. Start sending messages on Solana.",
+    message: "Welcome to txtalk! You're all set. Start sending messages on Solana.",
     txSignature: "SEED_TX_SIGNATURE",
     tokenAddress: null,
     feePaid: 0,

@@ -33,7 +33,7 @@ app.get("/", async (c: HonoContext) => {
   await ensureDatabaseInitialized();
   return c.json({
     status: "ok",
-    message: "solMessage Hono + tRPC server is running",
+    message: "txtalk Hono + tRPC server is running",
     database: AppDataSource.isInitialized ? "connected" : "disconnected",
     endpoints: {
       trpc: "/trpc",

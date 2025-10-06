@@ -4,9 +4,9 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-solmessage_db}
-      MYSQL_USER: ${MYSQL_USER:-solmessage}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-solmessage}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-txtalk_db}
+      MYSQL_USER: ${MYSQL_USER:-txtalk}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-txtalk}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
