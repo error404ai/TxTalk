@@ -78,7 +78,10 @@ jobs:
           tags: ${{ steps.meta_api.outputs.tags }}
           labels: ${{ steps.meta_api.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+        env:
+          # Enable inline cache metadata so subsequent buildx runs can import cache more effectively
+          BUILDKIT_INLINE_CACHE: 1
 
       # Step 9: Docker metadata for Frontend tagging
       - name: Docker meta (Frontend)
@@ -115,11 +118,13 @@ jobs:
           tags: ${{ steps.meta_frontend.outputs.tags }}
           labels: ${{ steps.meta_frontend.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
           build-args: |
             VITE_API_URL=https://api.txtalk.fun
             VITE_SOLANA_NETWORK=mainnet
             VITE_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+        env:
+          BUILDKIT_INLINE_CACHE: 1
 
       # Step 12: Set up SSH
       - name: Set up SSH
