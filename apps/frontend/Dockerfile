@@ -7,6 +7,6 @@ COPY . .
 RUN npm install -g pnpm
 RUN pnpm install
 
-EXPOSE 8000
+EXPOSE 5173
 
 CMD ["pnpm", "--filter", "@solmessage/frontend", "dev"]

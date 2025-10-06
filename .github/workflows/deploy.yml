@@ -1,0 +1,145 @@
+name: Docker CI & CD
+
+on:
+  push:
+    branches:
+      - production
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Step 2: Set up QEMU
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      # Step 3: Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Step 4: Log in to GitHub Container Registry
+      - name: Docker Login
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 5: Cache Docker layers
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # Step 6: Docker metadata for API tagging
+      - name: Docker meta (API)
+        id: meta_api
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/txtalk/api
+          flavor: |
+            latest=auto
+            prefix=
+            suffix=
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+            type=raw,value=latest
+
+      # Step 7: Debug API generated tags
+      - name: Debug API generated tags
+        run: |
+          echo "Service: API"
+          echo "Generated tags: ${{ steps.meta_api.outputs.tags }}"
+          echo "GitHub ref_name: ${{ github.ref_name }}"
+
+      # Step 8: Build and push API image
+      - name: Build and Push API
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: apps/api/Dockerfile.prod
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta_api.outputs.tags }}
+          labels: ${{ steps.meta_api.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      # Step 9: Docker metadata for Frontend tagging
+      - name: Docker meta (Frontend)
+        id: meta_frontend
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/txtalk/frontend
+          flavor: |
+            latest=auto
+            prefix=
+            suffix=
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+            type=raw,value=latest
+
+      # Step 10: Debug Frontend generated tags
+      - name: Debug Frontend generated tags
+        run: |
+          echo "Service: Frontend"
+          echo "Generated tags: ${{ steps.meta_frontend.outputs.tags }}"
+          echo "GitHub ref_name: ${{ github.ref_name }}"
+
+      # Step 11: Build and push Frontend image
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: apps/frontend/Dockerfile.prod
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta_frontend.outputs.tags }}
+          labels: ${{ steps.meta_frontend.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      # Step 12: Set up SSH
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_DEPLOY_KEY }}
+
+      # Step 13: Test SSH Connection
+      - name: Test SSH Connection
+        run: |
+          ssh -T -o StrictHostKeyChecking=no root@62.72.26.9 whoami
+
+      # Step 14: Deploy to VPS
+      - name: Deploy to VPS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ssh -T -o StrictHostKeyChecking=no root@62.72.26.9 \
+            "echo '$GITHUB_TOKEN' | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
+             docker pull ghcr.io/${{ github.repository_owner }}/txtalk/api:latest && \
+             docker pull ghcr.io/${{ github.repository_owner }}/txtalk/frontend:latest && \
+             cd /var/www/TxTalk && \
+             git pull origin production && \
+             docker-compose -f docker-compose-prod.yml down --remove-orphans && \
+             TAG=latest docker-compose -f docker-compose-prod.yml up -d && \
+             docker system prune -a --volumes=false --force && \
+             rm -f /root/.docker/config.json"

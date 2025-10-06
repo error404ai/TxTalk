@@ -7,8 +7,6 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-solmessage_db}
       MYSQL_USER: ${MYSQL_USER:-solmessage}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-solmessage}
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -20,32 +18,22 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     restart: unless-stopped
-    environment:
-      PMA_HOST: mysql
-      PMA_USER: root
-      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
+    # environment:
+    #   PMA_HOST: mysql
+    #   PMA_USER: root
+    #   PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
+    #   MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
     ports:
-      - "8080:80"
+      - "8081:80"
     depends_on:
       mysql:
         condition: service_healthy
 
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile.prod
+    image: ghcr.io/error404ai/txtalk/api:${TAG}
     restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      PORT: ${API_PORT:-8000}
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USERNAME: ${MYSQL_USER:-solmessage}
-      DB_PASSWORD: ${MYSQL_PASSWORD:-solmessage}
-      DB_NAME: ${MYSQL_DATABASE:-solmessage_db}
-      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-false}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4173}
+    env_file:
+      - /app/api/.env
     ports:
       - "8000:8000"
     depends_on:
@@ -53,17 +41,12 @@ services:
         condition: service_healthy
 
   frontend:
-    build:
-      context: .
-      dockerfile: apps/frontend/Dockerfile.prod
+    image: ghcr.io/error404ai/txtalk/frontend:${TAG}
     restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      PORT: ${FRONTEND_PORT:-4173}
-      API_URL: http://api:8000
-      VITE_API_URL: ${PUBLIC_API_URL:-http://localhost:8000}
+    env_file:
+      - /app/frontend/.env
     ports:
-      - "4173:4173"
+      - "3001:5173"
     depends_on:
       api:
         condition: service_started
