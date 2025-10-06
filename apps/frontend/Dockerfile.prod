@@ -7,6 +7,16 @@ COPY . .
 RUN npm install -g pnpm
 RUN pnpm install
 
+# Allow build-time injection of Vite env variables so import.meta.env.* is populated in the production bundle.
+ARG VITE_API_URL
+ARG VITE_SOLANA_NETWORK
+ARG VITE_SOLANA_RPC_URL
+
+# Export them as ENV so the build process (Vite) can read and embed them.
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_SOLANA_NETWORK=${VITE_SOLANA_NETWORK}
+ENV VITE_SOLANA_RPC_URL=${VITE_SOLANA_RPC_URL}
+
 RUN pnpm run build
 
 EXPOSE 5173
