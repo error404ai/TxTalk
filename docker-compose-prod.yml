@@ -33,7 +33,7 @@ services:
     image: ghcr.io/error404ai/txtalk/api:${TAG}
     restart: unless-stopped
     env_file:
-      - /app/api/.env
+      - /apps/api/.env
     ports:
       - "8000:8000"
     depends_on:
@@ -44,7 +44,7 @@ services:
     image: ghcr.io/error404ai/txtalk/frontend:${TAG}
     restart: unless-stopped
     env_file:
-      - /app/frontend/.env
+      - /apps/frontend/.env
     ports:
       - "3001:5173"
     depends_on:
