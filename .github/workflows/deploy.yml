@@ -39,12 +39,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          # Use a branch-scoped key so subsequent workflow runs on the same branch
-          # can restore and reuse the buildx cache. Using github.sha creates a
-          # unique cache every commit which prevents reuse.
-          key: ${{ runner.os }}-buildx-${{ github.ref_name }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ github.ref_name }}-
             ${{ runner.os }}-buildx-
 
       # Step 6: Docker metadata for API tagging
@@ -81,15 +77,8 @@ jobs:
           push: true
           tags: ${{ steps.meta_api.outputs.tags }}
           labels: ${{ steps.meta_api.outputs.labels }}
-          cache-from: |
-            type=gha
-            type=local,src=/tmp/.buildx-cache
-          cache-to: |
-            type=gha,mode=max
-            type=local,dest=/tmp/.buildx-cache,mode=max
-        env:
-          # Enable inline cache metadata so subsequent buildx runs can import cache more effectively
-          BUILDKIT_INLINE_CACHE: 1
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
 
       # Step 9: Docker metadata for Frontend tagging
       - name: Docker meta (Frontend)
@@ -125,18 +114,12 @@ jobs:
           push: true
           tags: ${{ steps.meta_frontend.outputs.tags }}
           labels: ${{ steps.meta_frontend.outputs.labels }}
-          cache-from: |
-            type=gha
-            type=local,src=/tmp/.buildx-cache
-          cache-to: |
-            type=gha,mode=max
-            type=local,dest=/tmp/.buildx-cache,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
           build-args: |
             VITE_API_URL=https://api.txtalk.fun
             VITE_SOLANA_NETWORK=mainnet
             VITE_SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-        env:
-          BUILDKIT_INLINE_CACHE: 1
 
       # Step 12: Set up SSH
       - name: Set up SSH
