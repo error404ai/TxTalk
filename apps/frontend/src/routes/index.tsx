@@ -23,6 +23,7 @@ function Index() {
   const [solPrice, setSolPrice] = useState<{ usd: number; change24h: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [txResult, setTxResult] = useState<{ txSignature: string; solscanLink: string } | null>(null);
+  const [copiedTx, setCopiedTx] = useState(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean | null>(null);
   const [historyFilter, setHistoryFilter] = useState<"sent" | "received" | "all">("sent");
 
@@ -237,9 +238,8 @@ function Index() {
       setWalletAddress("");
       setIsWalletMode(false);
       setIsValidAddress(null);
-      setShowPaymentModal(false);
-
-      alert("Message sent successfully!");
+      // keep the payment modal open so the user can view tx result / explorer link
+      // Success handled in the UI (txResult / modal). No browser alert.
     } catch (err) {
       console.error("Payment failed:", err);
       setError(err instanceof Error ? err.message : "Failed to send message");
@@ -247,6 +247,23 @@ function Index() {
     } finally {
       setIsProcessingPayment(false);
     }
+  };
+
+  const handleCopyTx = async () => {
+    if (!txResult?.txSignature) return;
+    try {
+      await navigator.clipboard.writeText(txResult.txSignature);
+      setCopiedTx(true);
+      setTimeout(() => setCopiedTx(false), 2000);
+    } catch (err) {
+      console.error("Copy failed", err);
+    }
+  };
+
+  const handleClosePaymentModal = () => {
+    setShowPaymentModal(false);
+    setTxResult(null);
+    setError(null);
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -581,27 +598,41 @@ function Index() {
                 </p>
               </div>
               {error && <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-100">{error}</div>}
-              {txResult && (
-                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-                  <p className="font-semibold text-emerald-200">Message delivered successfully!</p>
-                  <a href={txResult.solscanLink} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200">
-                    View on Solscan →
-                  </a>
+              {txResult ? (
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+                    <p className="font-semibold text-emerald-200">Message delivered successfully!</p>
+                    <p className="text-emerald-100 text-xs mt-2 break-words">{txResult.txSignature}</p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button onClick={handleCopyTx} className="flex-1 px-4 py-3 bg-neutral-800 border border-white/10 rounded-lg text-sm font-medium hover:bg-neutral-800/90 transition-all">
+                      {copiedTx ? "Copied" : "Copy Tx"}
+                    </button>
+                    <a href={txResult.solscanLink} target="_blank" rel="noopener noreferrer" className="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-semibold text-white transition-colors">
+                      View on Explorer
+                    </a>
+                  </div>
+
+                  <button onClick={handleClosePaymentModal} className="w-full px-6 py-3 bg-gradient-to-r from-neutral-700 to-neutral-600 hover:from-neutral-650 hover:to-neutral-550 text-white rounded-xl font-semibold transition-all">
+                    Done
+                  </button>
                 </div>
+              ) : (
+                <button onClick={handlePayment} disabled={isProcessingPayment} className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-neutral-700 disabled:to-neutral-700 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg disabled:shadow-none">
+                  {isProcessingPayment ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Confirm & Send
+                    </>
+                  )}
+                </button>
               )}
-              <button onClick={handlePayment} disabled={isProcessingPayment} className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-neutral-700 disabled:to-neutral-700 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg disabled:shadow-none">
-                {isProcessingPayment ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Confirm & Send
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>
