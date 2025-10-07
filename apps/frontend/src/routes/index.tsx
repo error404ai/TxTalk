@@ -1,8 +1,8 @@
 import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { Transaction } from "@solana/web3.js";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Clock, Github, History, MessageSquare, Send, Shuffle, Twitter, X, Zap } from "lucide-react";
+import { ArrowRight, Clock, Github, History, MessageSquare, Send, Shuffle, Twitter, Wallet, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { trpc } from "../trpc/trpc";
 
@@ -24,9 +24,9 @@ function Index() {
   const [error, setError] = useState<string | null>(null);
   const [txResult, setTxResult] = useState<{ txSignature: string; solscanLink: string } | null>(null);
   const [isValidAddress, setIsValidAddress] = useState<boolean | null>(null);
-  const [isClient, setIsClient] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<"sent" | "received" | "all">("sent");
 
+  const { setVisible: setWalletModalVisible } = useWalletModal();
   const walletBase58 = publicKey?.toBase58();
 
   // tRPC hooks
@@ -44,10 +44,6 @@ function Index() {
   const createTxMutation = trpc.message.createMessageTransaction.useMutation();
   const confirmMutation = trpc.message.confirmMessage.useMutation();
   const { data: validationResult } = trpc.message.validateAddress.useQuery({ address: walletAddress }, { enabled: walletAddress.length >= 32 && isWalletMode, retry: false });
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const sentMessages = messagesData?.sent ?? [];
   const receivedMessages = messagesData?.received ?? [];
@@ -339,8 +335,8 @@ function Index() {
             <button className="px-5 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors">Get Token</button>
             {publicKey ? (
               <div className="relative">
-                <button onClick={() => setShowWalletDropdown(!showWalletDropdown)} className="px-5 py-2 bg-white text-neutral-950 rounded-lg text-sm font-semibold hover:bg-neutral-100 transition-all flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
+                <button onClick={() => setShowWalletDropdown(!showWalletDropdown)} className="px-5 py-2 bg-white text-neutral-950 rounded-lg text-sm font-semibold hover:bg-neutral-100 transition-all flex items-center gap-2 shadow-sm">
+                  <Wallet className="w-4 h-4" />
                   {walletBase58?.slice(0, 4)}...{walletBase58?.slice(-4)}
                 </button>
                 {showWalletDropdown && (
@@ -353,7 +349,10 @@ function Index() {
                 )}
               </div>
             ) : (
-              <>{isClient && <WalletMultiButton className="!px-5 !py-2 !bg-white !text-neutral-950 !rounded-lg !text-sm !font-semibold hover:!bg-neutral-100 !transition-all" />}</>
+              <button onClick={() => setWalletModalVisible(true)} className="px-5 py-2 bg-white text-neutral-950 rounded-lg text-sm font-semibold hover:bg-neutral-100 transition-all flex items-center gap-2 shadow-sm">
+                <Wallet className="w-4 h-4" />
+                Connect Wallet
+              </button>
             )}
           </div>
         </div>
