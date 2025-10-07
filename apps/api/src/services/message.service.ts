@@ -139,11 +139,13 @@ class MessageService {
   /**
    * Get messages sent by a wallet
    */
-  async getSentMessages(walletAddress: string): Promise<MessageSummary[]> {
-    const messages = await this.messageRepository.find({
+  async getSentMessages(walletAddress: string, limit?: number): Promise<MessageSummary[]> {
+    const findOpts: any = {
       where: { sender: walletAddress },
       order: { createdAt: "DESC" },
-    });
+    };
+    if (limit) findOpts.take = limit;
+    const messages = await this.messageRepository.find(findOpts);
 
     return messages.map((msg) => ({
       id: msg.id,
@@ -161,11 +163,13 @@ class MessageService {
   /**
    * Get messages received by a wallet
    */
-  async getReceivedMessages(walletAddress: string): Promise<MessageSummary[]> {
-    const messages = await this.messageRepository.find({
+  async getReceivedMessages(walletAddress: string, limit?: number): Promise<MessageSummary[]> {
+    const findOpts: any = {
       where: { receiver: walletAddress },
       order: { createdAt: "DESC" },
-    });
+    };
+    if (limit) findOpts.take = limit;
+    const messages = await this.messageRepository.find(findOpts);
 
     return messages.map((msg) => ({
       id: msg.id,
@@ -183,11 +187,50 @@ class MessageService {
   /**
    * Get all messages for a wallet (sent and received)
    */
-  async getAllMessages(walletAddress: string): Promise<{
+  async getAllMessages(
+    walletAddress: string,
+    limit?: number
+  ): Promise<{
     sent: MessageSummary[];
     received: MessageSummary[];
   }> {
-    const [sent, received] = await Promise.all([this.getSentMessages(walletAddress), this.getReceivedMessages(walletAddress)]);
+    // Query messages where wallet is either sender or receiver, order by newest first,
+    // and apply a single limit so we return the latest `limit` messages across both directions.
+    const findOpts: any = {
+      where: [{ sender: walletAddress }, { receiver: walletAddress }],
+      order: { createdAt: "DESC" },
+    };
+    if (limit) findOpts.take = limit;
+
+    const messages = await this.messageRepository.find(findOpts);
+
+    const sent = messages
+      .filter((m) => m.sender === walletAddress)
+      .map((msg) => ({
+        id: msg.id,
+        sender: msg.sender,
+        receiver: msg.receiver,
+        message: msg.message,
+        txSignature: msg.txSignature,
+        tokenAddress: msg.tokenAddress ?? null,
+        feePaid: msg.feePaid,
+        createdAt: msg.createdAt,
+        solscanLink: solanaService.getSolscanLink(msg.txSignature),
+      }));
+
+    const received = messages
+      .filter((m) => m.receiver === walletAddress)
+      .map((msg) => ({
+        id: msg.id,
+        sender: msg.sender,
+        receiver: msg.receiver,
+        message: msg.message,
+        txSignature: msg.txSignature,
+        tokenAddress: msg.tokenAddress ?? null,
+        feePaid: msg.feePaid,
+        createdAt: msg.createdAt,
+        solscanLink: solanaService.getSolscanLink(msg.txSignature),
+      }));
 
     return { sent, received };
   }

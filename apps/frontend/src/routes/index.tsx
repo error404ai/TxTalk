@@ -37,7 +37,7 @@ function Index() {
     refetch: refetchMessages,
     isFetching: isFetchingMessages,
   } = trpc.message.getAllMessages.useQuery(
-    { walletAddress: walletBase58 || "" },
+    { walletAddress: walletBase58 || "", limit: 5 },
     {
       enabled: !!publicKey,
     }
@@ -60,8 +60,12 @@ function Index() {
     return combinedMessages;
   }, [combinedMessages, historyFilter, receivedMessages, sentMessages]);
 
-  const recentSent = useMemo(() => sentMessages.slice(0, 3), [sentMessages]);
-  const recentReceived = useMemo(() => receivedMessages.slice(0, 3), [receivedMessages]);
+  // Server returns up to the requested limit (5). Render filteredMessages directly.
+
+  // Do not slice on the frontend — the backend controls the requested limit.
+  // Render the server-provided arrays directly so UI matches server-side limits.
+  const recentSent = useMemo(() => sentMessages, [sentMessages]);
+  const recentReceived = useMemo(() => receivedMessages, [receivedMessages]);
 
   const uniqueContacts = useMemo(() => {
     if (!messagesData) return 0;
@@ -702,7 +706,7 @@ function Index() {
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-neutral-500">{isFetchingMessages ? "Refreshing..." : `${filteredMessages.length} ${historyFilter} message${filteredMessages.length === 1 ? "" : "s"}`}</span>
+              <span className="text-xs text-neutral-500">{isFetchingMessages ? "Refreshing..." : `Showing ${filteredMessages.length} ${historyFilter} message${filteredMessages.length === 1 ? "" : "s"}`}</span>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-3">

@@ -30,6 +30,7 @@ export const confirmMessageValidation = z.object({
 
 export const getMessagesByWalletValidation = z.object({
   walletAddress: walletAddressSchema,
+  limit: z.number().int().min(1).max(100).optional(),
 });
 
 export const getMessageByTxSignatureValidation = z.object({

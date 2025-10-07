@@ -22,15 +22,15 @@ export const messageRouter = createTRPCRouter({
   }),
 
   getSentMessages: publicProcedure.input(getMessagesByWalletValidation).query(async ({ input }) => {
-    return await messageService.getSentMessages(input.walletAddress);
+    return await messageService.getSentMessages(input.walletAddress, input.limit);
   }),
 
   getReceivedMessages: publicProcedure.input(getMessagesByWalletValidation).query(async ({ input }) => {
-    return await messageService.getReceivedMessages(input.walletAddress);
+    return await messageService.getReceivedMessages(input.walletAddress, input.limit);
   }),
 
   getAllMessages: publicProcedure.input(getMessagesByWalletValidation).query(async ({ input }) => {
-    return await messageService.getAllMessages(input.walletAddress);
+    return await messageService.getAllMessages(input.walletAddress, input.limit);
   }),
 
   getMessageByTxSignature: publicProcedure.input(getMessageByTxSignatureValidation).query(async ({ input }) => {
