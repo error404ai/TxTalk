@@ -8,17 +8,31 @@ export function MessagesDashboard() {
   const { publicKey } = useWallet();
   const [isClient, setIsClient] = useState(false);
 
-  const { data: messagesData, isLoading } = trpc.message.getAllMessages.useQuery({ walletAddress: publicKey?.toBase58() || "" }, { enabled: !!publicKey });
+  const { data: messagesData, isLoading } = trpc.messages.getAllMessages.useQuery({ walletAddress: publicKey?.toBase58() || "" }, { enabled: !!publicKey });
+
+  const messages = messagesData?.messages ?? [];
+
+  const sentMessages = useMemo(() => {
+    if (!publicKey) return [] as typeof messages;
+    const wallet = publicKey.toBase58();
+    return messages.filter((msg) => msg.sender === wallet);
+  }, [messages, publicKey]);
+
+  const receivedMessages = useMemo(() => {
+    if (!publicKey) return [] as typeof messages;
+    const wallet = publicKey.toBase58();
+    return messages.filter((msg) => msg.receiver === wallet);
+  }, [messages, publicKey]);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const stats = useMemo(() => {
-    const sent = messagesData?.sent.length ?? 0;
-    const received = messagesData?.received.length ?? 0;
+    const sent = sentMessages.length;
+    const received = receivedMessages.length;
     const total = sent + received;
-    const lastActivity = [...(messagesData?.sent ?? []), ...(messagesData?.received ?? [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.createdAt;
+    const lastActivity = [...messages].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.createdAt;
 
     return {
       sent,
@@ -26,7 +40,7 @@ export function MessagesDashboard() {
       total,
       lastActivity,
     };
-  }, [messagesData]);
+  }, [messages, receivedMessages, sentMessages]);
 
   const formattedLastActivity = stats.lastActivity ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(stats.lastActivity)) : "—";
 
@@ -102,11 +116,11 @@ export function MessagesDashboard() {
                       <div key={idx} className="h-24 animate-pulse rounded-xl bg-white/5" />
                     ))}
                   </div>
-                ) : messagesData?.sent.length === 0 ? (
+                ) : sentMessages.length === 0 ? (
                   <div className="p-10 text-center text-sm text-slate-400">No messages sent yet. Compose one to get started!</div>
                 ) : (
                   <ul className="divide-y divide-white/10">
-                    {messagesData.sent.map((msg) => (
+                    {sentMessages.map((msg) => (
                       <li key={msg.id} className="flex flex-col gap-4 p-6 transition hover:bg-white/5">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="space-y-2">
@@ -144,11 +158,11 @@ export function MessagesDashboard() {
                       <div key={idx} className="h-24 animate-pulse rounded-xl bg-white/5" />
                     ))}
                   </div>
-                ) : messagesData?.received.length === 0 ? (
+                ) : receivedMessages.length === 0 ? (
                   <div className="p-10 text-center text-sm text-slate-400">No messages received yet. Share your wallet to collect on-chain notes.</div>
                 ) : (
                   <ul className="divide-y divide-white/10">
-                    {messagesData.received.map((msg) => (
+                    {receivedMessages.map((msg) => (
                       <li key={msg.id} className="flex flex-col gap-4 p-6 transition hover:bg-white/5">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="space-y-2">

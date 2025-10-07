@@ -31,6 +31,20 @@ export interface MessageSummary {
 class MessageService {
   private messageRepository = AppDataSource.getRepository(Message);
 
+  private mapToSummary(message: Message): MessageSummary {
+    return {
+      id: message.id,
+      sender: message.sender,
+      receiver: message.receiver,
+      message: message.message,
+      txSignature: message.txSignature,
+      tokenAddress: message.tokenAddress ?? null,
+      feePaid: message.feePaid,
+      createdAt: message.createdAt,
+      solscanLink: solanaService.getSolscanLink(message.txSignature),
+    };
+  }
+
   /**
    * Validate wallet address
    */
@@ -139,57 +153,63 @@ class MessageService {
   /**
    * Get messages sent by a wallet
    */
-  async getSentMessages(walletAddress: string): Promise<MessageSummary[]> {
-    const messages = await this.messageRepository.find({
+  async getSentMessages(walletAddress: string, limit?: number): Promise<MessageSummary[]> {
+    const findOpts: any = {
       where: { sender: walletAddress },
       order: { createdAt: "DESC" },
-    });
+    };
+    if (limit) findOpts.take = limit;
+    const messages = await this.messageRepository.find(findOpts);
 
-    return messages.map((msg) => ({
-      id: msg.id,
-      sender: msg.sender,
-      receiver: msg.receiver,
-      message: msg.message,
-      txSignature: msg.txSignature,
-      tokenAddress: msg.tokenAddress ?? null,
-      feePaid: msg.feePaid,
-      createdAt: msg.createdAt,
-      solscanLink: solanaService.getSolscanLink(msg.txSignature),
-    }));
+    return messages.map((msg) => this.mapToSummary(msg));
   }
 
   /**
    * Get messages received by a wallet
    */
-  async getReceivedMessages(walletAddress: string): Promise<MessageSummary[]> {
-    const messages = await this.messageRepository.find({
+  async getReceivedMessages(walletAddress: string, limit?: number): Promise<MessageSummary[]> {
+    const findOpts: any = {
       where: { receiver: walletAddress },
       order: { createdAt: "DESC" },
-    });
+    };
+    if (limit) findOpts.take = limit;
+    const messages = await this.messageRepository.find(findOpts);
 
-    return messages.map((msg) => ({
-      id: msg.id,
-      sender: msg.sender,
-      receiver: msg.receiver,
-      message: msg.message,
-      txSignature: msg.txSignature,
-      tokenAddress: msg.tokenAddress ?? null,
-      feePaid: msg.feePaid,
-      createdAt: msg.createdAt,
-      solscanLink: solanaService.getSolscanLink(msg.txSignature),
-    }));
+    return messages.map((msg) => this.mapToSummary(msg));
   }
 
   /**
    * Get all messages for a wallet (sent and received)
    */
-  async getAllMessages(walletAddress: string): Promise<{
-    sent: MessageSummary[];
-    received: MessageSummary[];
-  }> {
-    const [sent, received] = await Promise.all([this.getSentMessages(walletAddress), this.getReceivedMessages(walletAddress)]);
+  async getAllMessages(walletAddress: string, limit?: number): Promise<MessageSummary[]> {
+    const findOpts: any = {
+      where: [{ sender: walletAddress }, { receiver: walletAddress }],
+      order: { createdAt: "DESC" },
+    };
+    if (limit) findOpts.take = limit;
 
-    return { sent, received };
+    const messages = await this.messageRepository.find(findOpts);
+
+    return messages.map((msg) => this.mapToSummary(msg));
+  }
+
+  async getMessagesOverview(
+    walletAddress: string,
+    recentLimit: number
+  ): Promise<{
+    recent: MessageSummary[];
+    totals: { sent: number; received: number; combined: number };
+  }> {
+    const [recentMessages, sentCount, receivedCount] = await Promise.all([this.getAllMessages(walletAddress, recentLimit), this.messageRepository.count({ where: { sender: walletAddress } }), this.messageRepository.count({ where: { receiver: walletAddress } })]);
+
+    return {
+      recent: recentMessages,
+      totals: {
+        sent: sentCount,
+        received: receivedCount,
+        combined: sentCount + receivedCount,
+      },
+    };
   }
 
   /**
@@ -204,17 +224,7 @@ class MessageService {
       return null;
     }
 
-    return {
-      id: message.id,
-      sender: message.sender,
-      receiver: message.receiver,
-      message: message.message,
-      txSignature: message.txSignature,
-      tokenAddress: message.tokenAddress ?? null,
-      feePaid: message.feePaid,
-      createdAt: message.createdAt,
-      solscanLink: solanaService.getSolscanLink(message.txSignature),
-    };
+    return this.mapToSummary(message);
   }
 }
 
