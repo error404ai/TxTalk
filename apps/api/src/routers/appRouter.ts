@@ -4,7 +4,7 @@ import { messageRouter } from "./messageRouter";
 
 export const appRouter = createTRPCRouter({
   health: healthRouter,
-  message: messageRouter,
+  messages: messageRouter,
 });
 
 export type AppRouter = typeof appRouter;

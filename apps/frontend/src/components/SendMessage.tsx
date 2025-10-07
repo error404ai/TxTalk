@@ -22,10 +22,10 @@ export function SendMessage() {
   const [isClient, setIsClient] = useState(false);
 
   // tRPC queries and mutations
-  const { data: feeData } = trpc.message.getEstimatedFee.useQuery();
+  const { data: feeData } = trpc.messages.getEstimatedFee.useQuery();
 
   // Validate address query - only enabled when we want to validate
-  const { data: validationResult } = trpc.message.validateAddress.useQuery(
+  const { data: validationResult } = trpc.messages.validateAddress.useQuery(
     { address: receiverAddress },
     {
       enabled: shouldValidate && receiverAddress.length >= 32,
@@ -33,8 +33,8 @@ export function SendMessage() {
     }
   );
 
-  const createTxMutation = trpc.message.createMessageTransaction.useMutation();
-  const confirmMutation = trpc.message.confirmMessage.useMutation();
+  const createTxMutation = trpc.messages.createMessageTransaction.useMutation();
+  const confirmMutation = trpc.messages.confirmMessage.useMutation();
 
   useEffect(() => {
     setIsClient(true);

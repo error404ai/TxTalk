@@ -1,6 +1,6 @@
 import messageService from "../services/message.service";
 import { createTRPCRouter, publicProcedure } from "../trpc/trpc";
-import { confirmMessageValidation, createMessageTransactionValidation, getMessageByTxSignatureValidation, getMessagesByWalletValidation, validateAddressValidation } from "../validations/message.validation";
+import { confirmMessageValidation, createMessageTransactionValidation, getMessageByTxSignatureValidation, getMessagesByWalletValidation, getMessagesOverviewValidation, validateAddressValidation } from "../validations/message.validation";
 
 export const messageRouter = createTRPCRouter({
   validateAddress: publicProcedure.input(validateAddressValidation).query(async ({ input }) => {
@@ -21,6 +21,10 @@ export const messageRouter = createTRPCRouter({
     return await messageService.confirmMessage(input);
   }),
 
+  getMessagesOverview: publicProcedure.input(getMessagesOverviewValidation).query(async ({ input }) => {
+    return await messageService.getMessagesOverview(input.walletAddress, input.recentLimit);
+  }),
+
   getSentMessages: publicProcedure.input(getMessagesByWalletValidation).query(async ({ input }) => {
     return await messageService.getSentMessages(input.walletAddress, input.limit);
   }),
@@ -30,7 +34,8 @@ export const messageRouter = createTRPCRouter({
   }),
 
   getAllMessages: publicProcedure.input(getMessagesByWalletValidation).query(async ({ input }) => {
-    return await messageService.getAllMessages(input.walletAddress, input.limit);
+    const messages = await messageService.getAllMessages(input.walletAddress, input.limit);
+    return { messages };
   }),
 
   getMessageByTxSignature: publicProcedure.input(getMessageByTxSignatureValidation).query(async ({ input }) => {

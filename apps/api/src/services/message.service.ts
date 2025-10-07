@@ -31,6 +31,20 @@ export interface MessageSummary {
 class MessageService {
   private messageRepository = AppDataSource.getRepository(Message);
 
+  private mapToSummary(message: Message): MessageSummary {
+    return {
+      id: message.id,
+      sender: message.sender,
+      receiver: message.receiver,
+      message: message.message,
+      txSignature: message.txSignature,
+      tokenAddress: message.tokenAddress ?? null,
+      feePaid: message.feePaid,
+      createdAt: message.createdAt,
+      solscanLink: solanaService.getSolscanLink(message.txSignature),
+    };
+  }
+
   /**
    * Validate wallet address
    */
@@ -147,17 +161,7 @@ class MessageService {
     if (limit) findOpts.take = limit;
     const messages = await this.messageRepository.find(findOpts);
 
-    return messages.map((msg) => ({
-      id: msg.id,
-      sender: msg.sender,
-      receiver: msg.receiver,
-      message: msg.message,
-      txSignature: msg.txSignature,
-      tokenAddress: msg.tokenAddress ?? null,
-      feePaid: msg.feePaid,
-      createdAt: msg.createdAt,
-      solscanLink: solanaService.getSolscanLink(msg.txSignature),
-    }));
+    return messages.map((msg) => this.mapToSummary(msg));
   }
 
   /**
@@ -171,31 +175,13 @@ class MessageService {
     if (limit) findOpts.take = limit;
     const messages = await this.messageRepository.find(findOpts);
 
-    return messages.map((msg) => ({
-      id: msg.id,
-      sender: msg.sender,
-      receiver: msg.receiver,
-      message: msg.message,
-      txSignature: msg.txSignature,
-      tokenAddress: msg.tokenAddress ?? null,
-      feePaid: msg.feePaid,
-      createdAt: msg.createdAt,
-      solscanLink: solanaService.getSolscanLink(msg.txSignature),
-    }));
+    return messages.map((msg) => this.mapToSummary(msg));
   }
 
   /**
    * Get all messages for a wallet (sent and received)
    */
-  async getAllMessages(
-    walletAddress: string,
-    limit?: number
-  ): Promise<{
-    sent: MessageSummary[];
-    received: MessageSummary[];
-  }> {
-    // Query messages where wallet is either sender or receiver, order by newest first,
-    // and apply a single limit so we return the latest `limit` messages across both directions.
+  async getAllMessages(walletAddress: string, limit?: number): Promise<MessageSummary[]> {
     const findOpts: any = {
       where: [{ sender: walletAddress }, { receiver: walletAddress }],
       order: { createdAt: "DESC" },
@@ -204,35 +190,26 @@ class MessageService {
 
     const messages = await this.messageRepository.find(findOpts);
 
-    const sent = messages
-      .filter((m) => m.sender === walletAddress)
-      .map((msg) => ({
-        id: msg.id,
-        sender: msg.sender,
-        receiver: msg.receiver,
-        message: msg.message,
-        txSignature: msg.txSignature,
-        tokenAddress: msg.tokenAddress ?? null,
-        feePaid: msg.feePaid,
-        createdAt: msg.createdAt,
-        solscanLink: solanaService.getSolscanLink(msg.txSignature),
-      }));
+    return messages.map((msg) => this.mapToSummary(msg));
+  }
 
-    const received = messages
-      .filter((m) => m.receiver === walletAddress)
-      .map((msg) => ({
-        id: msg.id,
-        sender: msg.sender,
-        receiver: msg.receiver,
-        message: msg.message,
-        txSignature: msg.txSignature,
-        tokenAddress: msg.tokenAddress ?? null,
-        feePaid: msg.feePaid,
-        createdAt: msg.createdAt,
-        solscanLink: solanaService.getSolscanLink(msg.txSignature),
-      }));
+  async getMessagesOverview(
+    walletAddress: string,
+    recentLimit: number
+  ): Promise<{
+    recent: MessageSummary[];
+    totals: { sent: number; received: number; combined: number };
+  }> {
+    const [recentMessages, sentCount, receivedCount] = await Promise.all([this.getAllMessages(walletAddress, recentLimit), this.messageRepository.count({ where: { sender: walletAddress } }), this.messageRepository.count({ where: { receiver: walletAddress } })]);
 
-    return { sent, received };
+    return {
+      recent: recentMessages,
+      totals: {
+        sent: sentCount,
+        received: receivedCount,
+        combined: sentCount + receivedCount,
+      },
+    };
   }
 
   /**
@@ -247,17 +224,7 @@ class MessageService {
       return null;
     }
 
-    return {
-      id: message.id,
-      sender: message.sender,
-      receiver: message.receiver,
-      message: message.message,
-      txSignature: message.txSignature,
-      tokenAddress: message.tokenAddress ?? null,
-      feePaid: message.feePaid,
-      createdAt: message.createdAt,
-      solscanLink: solanaService.getSolscanLink(message.txSignature),
-    };
+    return this.mapToSummary(message);
   }
 }
 

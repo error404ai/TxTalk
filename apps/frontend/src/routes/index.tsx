@@ -25,62 +25,65 @@ function Index() {
   const [txResult, setTxResult] = useState<{ txSignature: string; solscanLink: string } | null>(null);
   const [copiedTx, setCopiedTx] = useState(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean | null>(null);
-  const [historyFilter, setHistoryFilter] = useState<"sent" | "received" | "all">("sent");
+  const [historyFilter, setHistoryFilter] = useState<"recent" | "all">("recent");
 
   const { setVisible: setWalletModalVisible } = useWalletModal();
   const walletBase58 = publicKey?.toBase58();
 
   // tRPC hooks
-  const { data: feeData } = trpc.message.getEstimatedFee.useQuery();
+  const { data: feeData } = trpc.messages.getEstimatedFee.useQuery();
   const {
-    data: messagesData,
-    refetch: refetchMessages,
-    isFetching: isFetchingMessages,
-  } = trpc.message.getAllMessages.useQuery(
-    { walletAddress: walletBase58 || "", limit: 5 },
+    data: overviewData,
+    refetch: refetchOverview,
+    isFetching: isFetchingOverview,
+  } = trpc.messages.getMessagesOverview.useQuery(
+    { walletAddress: walletBase58 || "", recentLimit: 5 },
     {
       enabled: !!publicKey,
     }
   );
-  const createTxMutation = trpc.message.createMessageTransaction.useMutation();
-  const confirmMutation = trpc.message.confirmMessage.useMutation();
-  const { data: validationResult } = trpc.message.validateAddress.useQuery({ address: walletAddress }, { enabled: walletAddress.length >= 32 && isWalletMode, retry: false });
+  const {
+    data: allMessagesData,
+    refetch: refetchAllMessages,
+    isFetching: isFetchingAllMessages,
+  } = trpc.messages.getAllMessages.useQuery(
+    { walletAddress: walletBase58 || "" },
+    {
+      enabled: false,
+      refetchOnWindowFocus: false,
+    }
+  );
+  const createTxMutation = trpc.messages.createMessageTransaction.useMutation();
+  const confirmMutation = trpc.messages.confirmMessage.useMutation();
+  const { data: validationResult } = trpc.messages.validateAddress.useQuery({ address: walletAddress }, { enabled: walletAddress.length >= 32 && isWalletMode, retry: false });
 
-  const sentMessages = messagesData?.sent ?? [];
-  const receivedMessages = messagesData?.received ?? [];
+  const recentMessages = overviewData?.recent ?? [];
+  const totalSent = overviewData?.totals.sent ?? 0;
+  const totalReceived = overviewData?.totals.received ?? 0;
+  const totalCombined = overviewData?.totals.combined ?? 0;
 
-  const combinedMessages = useMemo(() => {
-    const merged = [...sentMessages, ...receivedMessages];
-    return merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [receivedMessages, sentMessages]);
+  const allMessages = allMessagesData?.messages ?? [];
 
-  const filteredMessages = useMemo(() => {
-    if (historyFilter === "sent") return sentMessages;
-    if (historyFilter === "received") return receivedMessages;
-    return combinedMessages;
-  }, [combinedMessages, historyFilter, receivedMessages, sentMessages]);
+  const messagesForContacts = useMemo(() => (allMessages.length > 0 ? allMessages : recentMessages), [allMessages, recentMessages]);
 
-  // Server returns up to the requested limit (5). Render filteredMessages directly.
+  const displayedMessages = useMemo(() => (historyFilter === "all" ? allMessages : recentMessages), [allMessages, historyFilter, recentMessages]);
 
-  // Do not slice on the frontend — the backend controls the requested limit.
-  // Render the server-provided arrays directly so UI matches server-side limits.
-  const recentSent = useMemo(() => sentMessages, [sentMessages]);
-  const recentReceived = useMemo(() => receivedMessages, [receivedMessages]);
+  const latestActivityMessage = useMemo(() => (messagesForContacts.length > 0 ? messagesForContacts[0] : null), [messagesForContacts]);
 
   const uniqueContacts = useMemo(() => {
-    if (!messagesData) return 0;
+    if (!publicKey) return 0;
+    const wallet = publicKey.toBase58();
     const contacts = new Set<string>();
-    const wallet = publicKey?.toBase58();
-    sentMessages.forEach((msg) => {
-      if (msg.receiver !== wallet) contacts.add(msg.receiver);
-    });
-    receivedMessages.forEach((msg) => {
-      if (msg.sender !== wallet) contacts.add(msg.sender);
+    messagesForContacts.forEach((msg) => {
+      const counterparty = msg.sender === wallet ? msg.receiver : msg.sender;
+      contacts.add(counterparty);
     });
     return contacts.size;
-  }, [messagesData, publicKey, receivedMessages, sentMessages]);
+  }, [messagesForContacts, publicKey]);
 
-  const hasMessageActivity = sentMessages.length > 0 || receivedMessages.length > 0;
+  const hasMessageActivity = totalCombined > 0;
+
+  const isFetchingMessages = historyFilter === "all" ? isFetchingAllMessages : isFetchingOverview;
 
   useEffect(() => {
     if (validationResult) {
@@ -90,6 +93,12 @@ function Index() {
       }
     }
   }, [validationResult]);
+
+  useEffect(() => {
+    if (historyFilter === "all" && publicKey) {
+      refetchAllMessages();
+    }
+  }, [historyFilter, publicKey, refetchAllMessages]);
 
   useEffect(() => {
     const generateParticles = () => {
@@ -234,8 +243,11 @@ function Index() {
         solscanLink: result.solscanLink,
       });
 
-      // Refetch messages
-      await refetchMessages();
+      // Refresh message data
+      await refetchOverview();
+      if (historyFilter === "all" || allMessages.length > 0) {
+        await refetchAllMessages();
+      }
 
       // Clear form
       setMessage("");
@@ -455,8 +467,7 @@ function Index() {
                 </div>
                 <div className="flex gap-2 bg-neutral-900/80 border border-white/10 rounded-xl p-2">
                   {[
-                    { key: "sent" as const, label: "Sent" },
-                    { key: "received" as const, label: "Received" },
+                    { key: "recent" as const, label: "Recent 5" },
                     { key: "all" as const, label: "All" },
                   ].map((tab) => (
                     <button key={tab.key} onClick={() => setHistoryFilter(tab.key)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${historyFilter === tab.key ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white" : "text-neutral-400 hover:text-white"}`}>
@@ -469,79 +480,50 @@ function Index() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="p-6 bg-neutral-900/60 border border-white/5 rounded-2xl flex flex-col gap-3">
                   <span className="text-sm uppercase tracking-wide text-neutral-500">Sent messages</span>
-                  <span className="text-4xl font-semibold text-white">{sentMessages.length}</span>
+                  <span className="text-4xl font-semibold text-white">{totalSent}</span>
                   <p className="text-sm text-neutral-500">
                     Delivered to {uniqueContacts} wallet{uniqueContacts === 1 ? "" : "s"}
                   </p>
                 </div>
                 <div className="p-6 bg-neutral-900/60 border border-white/5 rounded-2xl flex flex-col gap-3">
                   <span className="text-sm uppercase tracking-wide text-neutral-500">Inbox</span>
-                  <span className="text-4xl font-semibold text-white">{receivedMessages.length}</span>
+                  <span className="text-4xl font-semibold text-white">{totalReceived}</span>
                   <p className="text-sm text-neutral-500">Incoming notes from your network</p>
                 </div>
                 <div className="p-6 bg-neutral-900/60 border border-white/5 rounded-2xl flex flex-col gap-3">
                   <span className="text-sm uppercase tracking-wide text-neutral-500">Latest activity</span>
-                  <span className="text-4xl font-semibold text-white">{combinedMessages.length > 0 ? formatDate(combinedMessages[0].createdAt) : "—"}</span>
-                  <p className="text-sm text-neutral-500">
-                    Showing {filteredMessages.length} {historyFilter} message{filteredMessages.length === 1 ? "" : "s"}
-                  </p>
+                  <span className="text-4xl font-semibold text-white">{latestActivityMessage ? formatDate(latestActivityMessage.createdAt) : "—"}</span>
+                  <p className="text-sm text-neutral-500">{historyFilter === "recent" ? `Showing up to ${recentMessages.length} recent message${recentMessages.length === 1 ? "" : "s"}` : `Showing ${displayedMessages.length} total message${displayedMessages.length === 1 ? "" : "s"}`}</p>
                 </div>
               </div>
 
               {hasMessageActivity ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-neutral-900/50 border border-white/5 rounded-2xl p-6 space-y-5">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-semibold text-white">Recent sent</h3>
-                      <span className="text-sm text-neutral-500">Last {recentSent.length} deliveries</span>
-                    </div>
-                    {recentSent.length === 0 ? (
-                      <p className="text-neutral-500 text-sm">Send your first message to see it here.</p>
-                    ) : (
-                      <div className="space-y-4">
-                        {recentSent.map((item) => (
-                          <div key={item.id} className="bg-neutral-900 border border-white/5 rounded-xl p-4 space-y-3">
-                            <div className="flex items-center gap-2 text-xs text-neutral-500">
-                              <Clock className="w-3 h-3" />
-                              {formatDate(item.createdAt)}
-                            </div>
-                            <p className="text-sm text-white leading-relaxed">{item.message}</p>
-                            <div className="flex items-center gap-2 text-xs text-neutral-400">
-                              <span className="text-neutral-500">To:</span>
-                              <span className="font-mono">
-                                {item.receiver.slice(0, 6)}...{item.receiver.slice(-4)}
-                              </span>
-                              <ArrowRight className="w-3 h-3" />
-                              <a href={item.solscanLink} target="_blank" rel="noreferrer" className="text-emerald-400 hover:text-emerald-300 transition-colors">
-                                Explorer
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                <div className="bg-neutral-900/50 border border-white/5 rounded-2xl p-6 space-y-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 className="text-xl font-semibold text-white">{historyFilter === "recent" ? "Recent 5 messages" : "All messages"}</h3>
+                    <span className="text-sm text-neutral-500">{historyFilter === "recent" ? `Last ${displayedMessages.length} message${displayedMessages.length === 1 ? "" : "s"}` : `${displayedMessages.length} total message${displayedMessages.length === 1 ? "" : "s"}`}</span>
                   </div>
 
-                  <div className="bg-neutral-900/50 border border-white/5 rounded-2xl p-6 space-y-5">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-semibold text-white">Recent received</h3>
-                      <span className="text-sm text-neutral-500">Last {recentReceived.length} inbox notes</span>
-                    </div>
-                    {recentReceived.length === 0 ? (
-                      <p className="text-neutral-500 text-sm">Incoming messages will appear as soon as other wallets ping you.</p>
-                    ) : (
-                      <div className="space-y-4">
-                        {recentReceived.map((item) => (
+                  {isFetchingMessages && displayedMessages.length === 0 ? (
+                    <p className="text-neutral-500 text-sm">Loading messages...</p>
+                  ) : displayedMessages.length === 0 ? (
+                    <p className="text-neutral-500 text-sm">Your history is loading. Try again in a moment.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {displayedMessages.map((item) => {
+                        const isSender = item.sender === walletBase58;
+                        const counterparty = isSender ? item.receiver : item.sender;
+                        return (
                           <div key={item.id} className="bg-neutral-900 border border-white/5 rounded-xl p-4 space-y-3">
                             <div className="flex items-center gap-2 text-xs text-neutral-500">
                               <Clock className="w-3 h-3" />
                               {formatDate(item.createdAt)}
                             </div>
-                            <p className="text-sm text-white leading-relaxed">{item.message}</p>
+                            <p className="text-sm text-white leading-relaxed break-words">{item.message}</p>
                             <div className="flex items-center gap-2 text-xs text-neutral-400">
-                              <span className="text-neutral-500">From:</span>
+                              <span className="text-neutral-500">{isSender ? "To:" : "From:"}</span>
                               <span className="font-mono">
-                                {item.sender.slice(0, 6)}...{item.sender.slice(-4)}
+                                {counterparty.slice(0, 6)}...{counterparty.slice(-4)}
                               </span>
                               <ArrowRight className="w-3 h-3" />
                               <a href={item.solscanLink} target="_blank" rel="noreferrer" className="text-emerald-400 hover:text-emerald-300 transition-colors">
@@ -549,10 +531,10 @@ function Index() {
                               </a>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-neutral-900/40 border border-white/5 rounded-2xl p-10 text-center space-y-4">
@@ -697,8 +679,7 @@ function Index() {
             <div className="px-6 pt-4 flex items-center justify-between border-b border-white/10">
               <div className="flex gap-2 bg-neutral-900/80 border border-white/10 rounded-xl p-1">
                 {[
-                  { key: "sent" as const, label: "Sent" },
-                  { key: "received" as const, label: "Received" },
+                  { key: "recent" as const, label: "Recent 5" },
                   { key: "all" as const, label: "All" },
                 ].map((tab) => (
                   <button key={tab.key} onClick={() => setHistoryFilter(tab.key)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${historyFilter === tab.key ? "bg-emerald-500/20 text-emerald-300" : "text-neutral-400 hover:text-white"}`}>
@@ -706,20 +687,20 @@ function Index() {
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-neutral-500">{isFetchingMessages ? "Refreshing..." : `Showing ${filteredMessages.length} ${historyFilter} message${filteredMessages.length === 1 ? "" : "s"}`}</span>
+              <span className="text-xs text-neutral-500">{isFetchingMessages ? "Refreshing..." : historyFilter === "recent" ? `Showing ${displayedMessages.length} recent message${displayedMessages.length === 1 ? "" : "s"}` : `Showing ${displayedMessages.length} total message${displayedMessages.length === 1 ? "" : "s"}`}</span>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-3">
-              {filteredMessages.length === 0 ? (
+              {displayedMessages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mb-4">
                     <Clock className="w-8 h-8 text-neutral-600" />
                   </div>
-                  <p className="text-neutral-400 text-lg">No {historyFilter} messages yet</p>
-                  <p className="text-neutral-500 text-sm mt-2">{historyFilter === "received" ? "Your inbox is quiet for now." : "Start a conversation to populate your history."}</p>
+                  <p className="text-neutral-400 text-lg">{isFetchingMessages ? "Loading your history..." : totalCombined === 0 ? "No messages yet" : "No messages for this view right now"}</p>
+                  <p className="text-neutral-500 text-sm mt-2">{isFetchingMessages ? "Pulling the latest messages from the network." : totalCombined === 0 ? "Send or receive a message to populate your history." : "Switch tabs or try again shortly."}</p>
                 </div>
               ) : (
-                filteredMessages.map((item) => {
+                displayedMessages.map((item) => {
                   const isSender = item.sender === walletBase58;
                   const counterparty = isSender ? item.receiver : item.sender;
 
