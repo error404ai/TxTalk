@@ -1,4 +1,4 @@
-const requiredKeys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USERNAME", "DB_PASSWORD", "MYSQL_ROOT_PASSWORD", "API_PORT", "API_HOST", "SYNCHRONIZE", "SOLANA_NETWORK", "SOLANA_RPC_URL"] as const;
+const requiredKeys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USERNAME", "DB_PASSWORD", "MYSQL_ROOT_PASSWORD", "API_PORT", "API_HOST", "SYNCHRONIZE", "SOLANA_NETWORK", "SOLANA_RPC_URL", "BNB_NETWORK", "BNB_RPC_URL"] as const;
 
 const missing = requiredKeys.filter((k) => {
   const v = process.env[k];
@@ -23,6 +23,9 @@ const envConfig = {
   SOLANA_RPC_URL: process.env.SOLANA_RPC_URL as string,
   SOLANA_PAYER_PRIVATE_KEY: process.env.SOLANA_PAYER_PRIVATE_KEY as string | undefined,
   MESSAGE_METADATA_IMAGE_URL: process.env.MESSAGE_METADATA_IMAGE_URL as string | undefined,
+  BNB_NETWORK: process.env.BNB_NETWORK as string,
+  BNB_RPC_URL: process.env.BNB_RPC_URL as string,
+  BNB_PAYER_PRIVATE_KEY: process.env.BNB_PAYER_PRIVATE_KEY as string | undefined,
 };
 
 export default envConfig;

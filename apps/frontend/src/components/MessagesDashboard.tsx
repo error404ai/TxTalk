@@ -135,7 +135,7 @@ export function MessagesDashboard() {
                             <span className="rounded-full bg-white/5 px-3 py-1 font-semibold text-slate-200">Fee {msg.feePaid} SOL</span>
                             {msg.tokenAddress && <span className="font-mono text-slate-400">Token {msg.tokenAddress.substring(0, 8)}…</span>}
                           </div>
-                          <a href={msg.solscanLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+                          <a href={msg.explorerLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
                             View on Solscan →
                           </a>
                         </div>
@@ -174,7 +174,7 @@ export function MessagesDashboard() {
                         <p className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-relaxed text-slate-200">{msg.message}</p>
                         <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
                           <div className="flex flex-wrap items-center gap-4">{msg.tokenAddress && <span className="font-mono text-slate-400">Token {msg.tokenAddress.substring(0, 8)}…</span>}</div>
-                          <a href={msg.solscanLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-purple-200 hover:text-purple-100">
+                          <a href={msg.explorerLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-purple-200 hover:text-purple-100">
                             View on Solscan →
                           </a>
                         </div>

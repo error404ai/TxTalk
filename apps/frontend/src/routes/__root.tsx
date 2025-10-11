@@ -1,13 +1,13 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { BlockchainProvider } from "../components/providers/BlockchainProvider";
 import { RouterDevtools } from "../components/providers/RouterDevtools";
-import { SolanaWalletProvider } from "../components/providers/SolanaWalletProvider";
 
 const RootLayout = () => {
   return (
-    <SolanaWalletProvider>
+    <BlockchainProvider>
       <Outlet />
       <RouterDevtools />
-    </SolanaWalletProvider>
+    </BlockchainProvider>
   );
 };
 

@@ -5,6 +5,9 @@ export class Message {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
+  @Column({ type: "varchar", length: 20, default: "solana" })
+  blockchain!: string; // 'solana' or 'bnb'
+
   @Column({ type: "varchar", length: 100 })
   sender!: string;
 
@@ -14,7 +17,7 @@ export class Message {
   @Column({ type: "text" })
   message!: string;
 
-  @Column({ type: "varchar", length: 100 })
+  @Column({ type: "varchar", length: 150 })
   txSignature!: string;
 
   @Column({ type: "varchar", length: 100, nullable: true })

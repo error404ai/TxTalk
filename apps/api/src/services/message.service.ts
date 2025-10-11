@@ -1,11 +1,13 @@
 import { AppDataSource } from "../database";
 import { Message } from "../entities/Message";
+import bnbService from "./bnb.service";
 import solanaService from "./solana.service";
 
 export interface CreateMessageTransactionParams {
   senderPublicKey: string;
   receiverAddress: string;
   message: string;
+  blockchain: "solana" | "bnb";
 }
 
 export interface ConfirmMessageParams {
@@ -13,11 +15,13 @@ export interface ConfirmMessageParams {
   receiverAddress: string;
   message: string;
   signedTransaction: string;
-  tokenAddress: string;
+  tokenAddress?: string;
+  blockchain: "solana" | "bnb";
 }
 
 export interface MessageSummary {
   id: string;
+  blockchain: string;
   sender: string;
   receiver: string;
   message: string;
@@ -25,15 +29,18 @@ export interface MessageSummary {
   tokenAddress: string | null;
   feePaid: number;
   createdAt: Date;
-  solscanLink: string;
+  explorerLink: string;
 }
 
 class MessageService {
   private messageRepository = AppDataSource.getRepository(Message);
 
   private mapToSummary(message: Message): MessageSummary {
+    const explorerLink = message.blockchain === "bnb" ? bnbService.getBscScanLink(message.txSignature) : solanaService.getSolscanLink(message.txSignature);
+
     return {
       id: message.id,
+      blockchain: message.blockchain,
       sender: message.sender,
       receiver: message.receiver,
       message: message.message,
@@ -41,40 +48,46 @@ class MessageService {
       tokenAddress: message.tokenAddress ?? null,
       feePaid: message.feePaid,
       createdAt: message.createdAt,
-      solscanLink: solanaService.getSolscanLink(message.txSignature),
+      explorerLink,
     };
   }
 
   /**
-   * Validate wallet address
+   * Validate wallet address for a specific blockchain
    */
-  async validateAddress(address: string): Promise<{ valid: boolean; error?: string }> {
-    console.log("Validating address:", address);
-    const isValid = await solanaService.validateWalletAddress(address);
+  async validateAddress(address: string, blockchain: "solana" | "bnb"): Promise<{ valid: boolean; error?: string }> {
+    console.log(`Validating ${blockchain} address:`, address);
+
+    let isValid = false;
+    if (blockchain === "solana") {
+      isValid = await solanaService.validateWalletAddress(address);
+    } else if (blockchain === "bnb") {
+      isValid = await bnbService.validateWalletAddress(address);
+    }
+
     if (!isValid) {
-      return { valid: false, error: "Invalid Solana wallet address" };
+      return { valid: false, error: `Invalid ${blockchain === "solana" ? "Solana" : "BNB"} wallet address` };
     }
     return { valid: true };
   }
 
   /**
-   * Get estimated fee for sending message
+   * Get estimated fee for sending message on a specific blockchain
    */
-  async getEstimatedFee(): Promise<number> {
-    return await solanaService.estimateFee();
+  async getEstimatedFee(blockchain: "solana" | "bnb"): Promise<number> {
+    if (blockchain === "solana") {
+      return await solanaService.estimateFee();
+    } else {
+      return await bnbService.estimateFee();
+    }
   }
 
   /**
    * Create unsigned transaction for message sending
    * Returns the transaction for client-side signing
    */
-  async createMessageTransaction(params: CreateMessageTransactionParams): Promise<{
-    transaction: string;
-    mintKeypair: { publicKey: string; secretKey: string };
-    metadataUri: string | null;
-    estimatedFee: number;
-  }> {
-    const { senderPublicKey, receiverAddress, message } = params;
+  async createMessageTransaction(params: CreateMessageTransactionParams): Promise<any> {
+    const { senderPublicKey, receiverAddress, message, blockchain } = params;
 
     // Validate inputs
     if (!message || message.trim().length === 0) {
@@ -86,68 +99,87 @@ class MessageService {
     }
 
     // Validate receiver address
-    const receiverValidation = await this.validateAddress(receiverAddress);
+    const receiverValidation = await this.validateAddress(receiverAddress, blockchain);
     if (!receiverValidation.valid) {
       throw new Error(receiverValidation.error || "Invalid receiver address");
     }
 
     // Validate sender address
-    const senderValidation = await this.validateAddress(senderPublicKey);
+    const senderValidation = await this.validateAddress(senderPublicKey, blockchain);
     if (!senderValidation.valid) {
       throw new Error("Invalid sender address");
     }
 
-    // Create transaction
-    const { transaction, mintKeypair, metadataUri } = await solanaService.createMessageTransaction({
-      senderPublicKey,
-      receiverAddress,
-      message,
-    });
-
     // Get estimated fee
-    const estimatedFee = await this.getEstimatedFee();
+    const estimatedFee = await this.getEstimatedFee(blockchain);
 
-    return {
-      transaction,
-      mintKeypair,
-      metadataUri,
-      estimatedFee,
-    };
+    if (blockchain === "solana") {
+      // Create Solana transaction
+      const { transaction, mintKeypair, metadataUri } = await solanaService.createMessageTransaction({
+        senderPublicKey,
+        receiverAddress,
+        message,
+      });
+
+      return {
+        transaction,
+        mintKeypair,
+        metadataUri,
+        estimatedFee,
+        blockchain: "solana",
+      };
+    } else {
+      // Create BNB transaction
+      const { transaction, messageHash } = await bnbService.createMessageTransaction({
+        senderAddress: senderPublicKey,
+        receiverAddress,
+        message,
+      });
+
+      return {
+        transaction,
+        messageHash,
+        estimatedFee,
+        blockchain: "bnb",
+      };
+    }
   }
 
   /**
    * Confirm and save message after transaction is signed and sent
    */
   async confirmMessage(params: ConfirmMessageParams): Promise<MessageSummary> {
-    const { senderPublicKey, receiverAddress, message, signedTransaction, tokenAddress } = params;
+    const { senderPublicKey, receiverAddress, message, signedTransaction, tokenAddress, blockchain } = params;
 
-    // Send the signed transaction
-    const { txSignature, feePaid } = await solanaService.sendSignedTransaction(signedTransaction);
+    let txSignature: string;
+    let feePaid: number;
+
+    if (blockchain === "solana") {
+      // Send Solana transaction
+      const result = await solanaService.sendSignedTransaction(signedTransaction);
+      txSignature = result.txSignature;
+      feePaid = result.feePaid;
+    } else {
+      // Send BNB transaction
+      const result = await bnbService.sendSignedTransaction(signedTransaction);
+      txSignature = result.txHash;
+      feePaid = result.feePaid;
+    }
 
     // Save to database
     const messageEntity = this.messageRepository.create({
+      blockchain,
       sender: senderPublicKey,
       receiver: receiverAddress,
       message,
       txSignature,
-      tokenAddress,
+      tokenAddress: tokenAddress || null,
       feePaid,
     });
 
     await this.messageRepository.save(messageEntity);
 
-    // Return summary
-    return {
-      id: messageEntity.id,
-      sender: messageEntity.sender,
-      receiver: messageEntity.receiver,
-      message: messageEntity.message,
-      txSignature: messageEntity.txSignature,
-      tokenAddress: messageEntity.tokenAddress ?? null,
-      feePaid: messageEntity.feePaid,
-      createdAt: messageEntity.createdAt,
-      solscanLink: solanaService.getSolscanLink(txSignature),
-    };
+    return this.mapToSummary(messageEntity);
   }
 
   /**

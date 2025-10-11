@@ -22,11 +22,11 @@ export function SendMessage() {
   const [isClient, setIsClient] = useState(false);
 
   // tRPC queries and mutations
-  const { data: feeData } = trpc.messages.getEstimatedFee.useQuery();
+  const { data: feeData } = trpc.messages.getEstimatedFee.useQuery({ blockchain: "solana" });
 
   // Validate address query - only enabled when we want to validate
   const { data: validationResult } = trpc.messages.validateAddress.useQuery(
-    { address: receiverAddress },
+    { address: receiverAddress, blockchain: "solana" },
     {
       enabled: shouldValidate && receiverAddress.length >= 32,
       retry: false,
@@ -107,6 +107,7 @@ export function SendMessage() {
         senderPublicKey: publicKey.toBase58(),
         receiverAddress,
         message,
+        blockchain: "solana",
       });
 
       // Step 2: Deserialize and sign transaction with user's wallet
@@ -123,12 +124,13 @@ export function SendMessage() {
         message,
         signedTransaction: signedTxBase64,
         tokenAddress: txData.mintKeypair.publicKey,
+        blockchain: "solana",
       });
 
       setTxResult({
         id: result.id,
         txSignature: result.txSignature,
-        solscanLink: result.solscanLink,
+        solscanLink: result.explorerLink,
         metadataUri: txData.metadataUri,
       });
 

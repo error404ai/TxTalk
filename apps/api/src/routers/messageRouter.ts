@@ -1,15 +1,15 @@
 import messageService from "../services/message.service";
 import { createTRPCRouter, publicProcedure } from "../trpc/trpc";
-import { confirmMessageValidation, createMessageTransactionValidation, getMessageByTxSignatureValidation, getMessagesByWalletValidation, getMessagesOverviewValidation, validateAddressValidation } from "../validations/message.validation";
+import { confirmMessageValidation, createMessageTransactionValidation, getEstimatedFeeValidation, getMessageByTxSignatureValidation, getMessagesByWalletValidation, getMessagesOverviewValidation, validateAddressValidation } from "../validations/message.validation";
 
 export const messageRouter = createTRPCRouter({
   validateAddress: publicProcedure.input(validateAddressValidation).query(async ({ input }) => {
-    console.log("Validating address:", input.address);
-    return await messageService.validateAddress(input.address);
+    console.log(`Validating ${input.blockchain} address:`, input.address);
+    return await messageService.validateAddress(input.address, input.blockchain);
   }),
 
-  getEstimatedFee: publicProcedure.query(async () => {
-    const fee = await messageService.getEstimatedFee();
+  getEstimatedFee: publicProcedure.input(getEstimatedFeeValidation).query(async ({ input }) => {
+    const fee = await messageService.getEstimatedFee(input.blockchain);
     return { fee };
   }),
 
